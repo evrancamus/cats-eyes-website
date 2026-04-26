@@ -300,7 +300,7 @@ const slides = [
 				</div>
 
 				<div class="mt-12 flex flex-col gap-4">
-					<a id="service-btn-wa" href="https://wa.me/33762351391?text=Bonjour,%20je%20souhaite%20des%20infos%20sur%20le%20service%20traiteur" target="_blank" class="bg-cat-pine text-white text-center px-10 py-5 rounded-full font-bold text-lg shadow-xl hover:bg-cat-teal transition-all active:scale-95 duration-500">
+					<a id="service-btn-wa" href="https://wa.me/33631541175?text=Bonjour,%20je%20souhaite%20des%20infos%20sur%20le%20service%20traiteur" target="_blank" class="bg-cat-pine text-white text-center px-10 py-5 rounded-full font-bold text-lg shadow-xl hover:bg-cat-teal transition-all active:scale-95 duration-500">
 						<span id="service-label-wa">Discuter sur WhatsApp</span>
 					</a>
 					<p class="text-xs text-center text-cat-pine/50 uppercase font-bold tracking-widest">Réponse sous 24h</p>
@@ -409,7 +409,7 @@ const slides = [
 				if(serviceDesc) serviceDesc.innerText = data.desc;
 				if(serviceSubDesc) serviceSubDesc.innerText = data.subDesc;
 				if(serviceLabelWA) serviceLabelWA.innerText = data.btn;
-				if(serviceBtnWA) serviceBtnWA.href = `https://wa.me/33762351391?text=${encodeURIComponent(data.waMsg)}`;
+				if(serviceBtnWA) serviceBtnWA.href = `https://wa.me/33631541175?text=${encodeURIComponent(data.waMsg)}`;
 				
 				const slides = carousel.querySelectorAll('.snap-center');
 				slides.forEach((slide, idx) => {
@@ -855,7 +855,7 @@ const slides = [
 												Intensité :
 											</p>
 											<span class="spice-level-text text-[10px] font-black text-red-600 uppercase italic">
-												Doux 🌿
+												Pas de Piment 🌿
 											</span>
 										</div>
 										
@@ -1422,7 +1422,7 @@ const slides = [
 					const spiceInput = card.querySelector('.spice-range');
 					let spiceInfo = "";
 					if (spiceInput) {
-						const spiceLabelsShort = ["Doux", "Moyen", "Relevé", "Lave"];
+						const spiceLabelsShort = ["Pas de Piment", "Doux", "Relevé", "Lave"];
 						spiceInfo = ` | Piment : ${spiceLabelsShort[spiceInput.value]}`;
 					}
 
@@ -1613,7 +1613,7 @@ const slides = [
 					msg += `\n*TOTAL : ${total.toFixed(2)}€*`;
 					if(form.note) msg += `\nNote: ${form.note}`;
 
-					window.open(`https://wa.me/33762351391?text=${encodeURIComponent(msg)}`, '_blank');
+					window.open(`https://wa.me/33631541175?text=${encodeURIComponent(msg)}`, '_blank');
 
 					finalizeOrder();
 					alert("Commande transmise ! Pensez à envoyer le message WhatsApp qui vient de s'ouvrir. 🐾");
