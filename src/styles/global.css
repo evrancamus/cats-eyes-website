@@ -1,0 +1,9 @@
+@import "tailwindcss";
+
+@theme {
+  --color-cat-yellow: #F4B828;
+  --color-cat-teal: #006366;
+  --color-cat-pine: #0B352E;
+  --color-cat-wood: #E8D5B5;
+  --color-cat-pink: #D842A1;
+}

@@ -1,0 +1,59 @@
+---
+import Layout from '../../layouts/Layout.astro';
+---
+
+<Layout title="Connexion Admin">
+  <style is:inline>
+    #login-container {
+      opacity: 0;
+      transform: translateY(10px); /* Un petit décalage pour l'effet d'entrée */
+    }
+  </style>
+
+  <main class="min-h-screen flex items-center justify-center bg-cat-pine p-6">
+    <div 
+      id="login-container" 
+      class="bg-white p-8 rounded-[2.5rem] shadow-2xl w-full max-w-md transition-all duration-500 ease-out"
+    >
+      <h1 class="text-2xl font-bold text-cat-pine mb-6 italic">Accès Privé 🐾</h1>
+      
+      <form id="login-form" class="space-y-4">
+        <div>
+          <label class="block text-[10px] font-bold uppercase tracking-widest mb-1">Email</label>
+          <input type="email" id="email" class="w-full border-2 border-cat-pine/10 rounded-xl p-3 outline-none focus:border-cat-teal" required />
+        </div>
+        <div>
+          <label class="block text-[10px] font-bold uppercase tracking-widest mb-1">Mot de passe</label>
+          <input type="password" id="password" class="w-full border-2 border-cat-pine/10 rounded-xl p-3 outline-none focus:border-cat-teal" required />
+        </div>
+        <button type="submit" class="w-full bg-cat-pine text-white py-4 rounded-full font-bold hover:bg-cat-teal transition-all">
+          Se connecter
+        </button>
+      </form>
+    </div>
+  </main>
+</Layout>
+
+<script>
+  import { supabase } from '../../lib/supabase';
+
+  // 3. ON DÉVOILE LA PAGE UNIQUEMENT QUAND TOUT EST CHARGÉ
+  window.addEventListener('load', () => {
+    const container = document.getElementById('login-container');
+    if (container) {
+      container.style.opacity = '1';
+      container.style.transform = 'translateY(0)';
+    }
+  });
+
+  // Ton script de submit existant...
+  const loginForm = document.getElementById('login-form');
+  loginForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = (document.getElementById('email') as HTMLInputElement).value;
+    const password = (document.getElementById('password') as HTMLInputElement).value;
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) alert("Erreur : " + error.message);
+    else if (data.user) window.location.href = '/admin/hub';
+  });
+</script>

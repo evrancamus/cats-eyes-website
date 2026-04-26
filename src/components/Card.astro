@@ -1,0 +1,57 @@
+---
+interface Props {
+	title: string;
+	price: string;
+	description: string;
+	category: string;
+	tag?: string;
+	preorder?: boolean; // Ajout de la propriété "À commander 24h avant"
+}
+
+const { title, price, description, category, tag, preorder = false } = Astro.props;
+---
+
+<div class={`bg-white rounded-3xl p-6 shadow-lg border transition-all group flex flex-col justify-between h-full ${preorder ? 'border-cat-teal/30 bg-cat-teal/[0.02]' : 'border-cat-wood/20 hover:shadow-2xl'}`}>
+	
+	<div>
+		<div class="flex justify-between items-start mb-4 gap-2">
+			<div class="flex flex-wrap gap-2">
+				<span class="text-[10px] font-bold uppercase tracking-widest text-cat-teal/60 bg-cat-teal/5 px-3 py-1 rounded-full">
+					{category}
+				</span>
+				{tag && (
+					<span class="text-[10px] font-bold uppercase tracking-widest text-white bg-cat-pink px-3 py-1 rounded-full shadow-sm">
+						{tag}
+					</span>
+				)}
+			</div>
+
+			{preorder && (
+				<div class="flex items-center gap-1 bg-cat-teal text-white text-[9px] font-black px-2 py-1 rounded-lg animate-pulse shadow-sm whitespace-nowrap">
+					<span>⏳</span> 24H AVANCE
+				</div>
+			)}
+		</div>
+		
+		<h3 class="text-2xl font-bold text-cat-pine mb-2 group-hover:text-cat-teal transition-colors">
+			{title}
+		</h3>
+		
+		<p class="text-cat-pine/70 italic leading-relaxed mb-6 line-clamp-3">
+			{description}
+		</p>
+	</div>
+
+	<div class="flex justify-between items-center pt-4 border-t border-dashed border-cat-wood/40">
+		<span class="text-2xl font-black text-cat-teal">{price}€</span>
+		
+		<button 
+			class="add-to-cart-btn h-10 w-10 rounded-full bg-cat-yellow flex items-center justify-center group-hover:scale-110 transition-transform shadow-md active:scale-95"
+			data-title={title}
+			data-price={price}
+			data-preorder={preorder.toString()}
+		>
+			<span class="text-cat-pine text-xl font-bold">+</span>
+		</button>
+	</div>
+</div>

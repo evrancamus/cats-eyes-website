@@ -1,0 +1,15 @@
+---
+import '../styles/global.css';
+const { title } = Astro.props;
+---
+<html lang="fr" class="scroll-smooth">
+	<head>
+		<meta charset="utf-8" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<meta name="viewport" content="width=device-width" />
+		<title>{title} | Cat's Eyes Orléans</title>
+	</head>
+	<body class="bg-cat-wood text-cat-pine font-sans antialiased">
+		<slot />
+	</body>
+</html>

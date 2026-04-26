@@ -1,0 +1,329 @@
+---
+import Layout from '../../layouts/Layout.astro';
+---
+
+<Layout title="Commandes Live - Cat's Eyes">
+    <style is:inline>
+        /* 1. Reset & Fond */
+        html, body { 
+            margin: 0; 
+            padding: 0; 
+            background-color: #f1e7d0; /* Ton beige cat-wood */
+        }
+        html { visibility: hidden; } /* Protection flash */
+
+        /* 2. Animation */
+        .order-card { animation: slideIn 0.3s ease-out forwards; }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+
+    <div class="flex flex-col min-h-screen">
+        
+    <header class="w-full bg-white/50 backdrop-blur-md border-b border-cat-pine/10 p-6">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            
+            <div class="flex items-center gap-4">
+                <a href="/admin/hub" class="p-2 bg-white rounded-xl shadow-sm">
+                    <img src="/images/logo_circle.png" alt="Logo" class="h-10 w-10" />
+                </a>
+                <div>
+                    <h1 class="text-3xl font-black text-cat-pine italic leading-none">Commandes Live 🥢</h1>
+                    <p class="text-[10px] font-bold uppercase tracking-widest text-cat-pine/40 mt-1">Interface Isabelle</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <button id="open-history" class="mr-4 flex items-center gap-2 bg-white/80 hover:bg-white px-4 py-2 rounded-xl border border-cat-pine/10 text-cat-pine text-[10px] font-black uppercase tracking-widest transition-all shadow-sm">
+                    <span>🗑️</span> Corbeille
+                </button>
+
+                <div id="live-clock" class="bg-white px-4 py-2 rounded-xl font-black text-cat-pine text-xs italic shadow-sm">00:00</div>
+                <div class="bg-cat-pine px-4 py-2 rounded-xl flex items-center gap-2">
+                    <span class="w-2 h-2 bg-cat-teal rounded-full animate-ping"></span>
+                    <span id="status-badge" class="text-white text-[9px] font-black uppercase tracking-widest">Connecté</span>
+                </div>
+            </div>
+
+        </div>
+    </header>
+
+    <div id="history-modal" class="fixed inset-0 z-[200] hidden flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-cat-pine/40 backdrop-blur-sm" id="close-history-overlay"></div>
+        <div class="relative bg-[#f1e7d0] w-full max-w-2xl max-h-[80vh] rounded-[2.5rem] border-4 border-cat-pine shadow-2xl overflow-hidden flex flex-col">
+            <div class="p-6 border-b border-cat-pine/10 flex justify-between items-center bg-white">
+                <h3 class="font-black text-cat-pine italic uppercase tracking-widest text-sm">Commandes Annulées</h3>
+                <button id="close-history-btn" class="text-2xl font-black text-cat-pine">✕</button>
+            </div>
+            <div id="history-list" class="flex-grow overflow-y-auto p-6 space-y-4">
+                </div>
+        </div>
+    </div>
+
+        <main class="flex-grow p-6 md:p-12">
+            <div class="max-w-7xl mx-auto">
+                <div id="orders-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                    </div>
+
+                <div id="empty-state" class="hidden flex flex-col items-center justify-center py-20 opacity-20">
+                    <span class="text-6xl mb-4">🥡</span>
+                    <p class="font-black italic text-cat-pine text-xl">Aucune commande en cours</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        import { supabase } from '../../lib/supabase';
+
+        // --- 1. FONCTION DE CRÉATION DE CARTE ---
+        function createOrderCard(order) {
+            const card = document.createElement('div');
+            card.id = `order-${order.id}`;
+            card.className = "order-card relative bg-white rounded-[2.5rem] p-8 shadow-2xl border-t-8 border-cat-teal flex flex-col h-full min-h-[400px]";
+
+            const dateCreation = new Date(order.created_at).toLocaleTimeString('fr-FR', { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+            });
+
+            const dateObj = new Date(order.date_retrait);
+            const dateRetraitFr = dateObj.toLocaleDateString('fr-FR', { 
+                weekday: 'short', 
+                day: 'numeric', 
+                month: 'long' 
+            });
+            const dateFormatted = dateRetraitFr.charAt(0).toUpperCase() + dateRetraitFr.slice(1);
+
+            let totalPlats = 0;
+            const groupedItems = order.items.reduce((acc, item) => {
+                const key = `${item.title}-${item.variant}`;
+                if (!acc[key]) {
+                    acc[key] = { ...item, quantity: 1 };
+                } else {
+                    acc[key].quantity += 1;
+                }
+                totalPlats += 1;
+                return acc;
+            }, {});
+
+            const itemsArray = Object.values(groupedItems);
+
+            card.innerHTML = `
+                <button 
+                    onclick="window.deleteOrder('${order.id}')"
+                    class="absolute -top-3 -right-3 bg-white text-red-400 w-10 h-10 rounded-full shadow-lg flex items-center justify-center hover:bg-red-50 hover:text-red-600 transition-all border border-red-100 z-10"
+                    title="Annuler la commande"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                </button>
+
+                <div class="flex justify-between items-start mb-6">
+                    <div>
+                        <h3 class="font-black text-cat-pine text-2xl leading-tight">${order.nom_client}</h3>
+                        <p class="text-xs font-bold text-cat-teal uppercase tracking-widest mt-1">${order.telephone}</p>
+                    </div>
+                    <div class="text-right">
+                        <span class="block font-black text-cat-pine text-2xl bg-cat-pine/20 px-3 py-1 rounded-xl">${order.heure_retrait}</span>
+                        <span class="text-[10px] font-black opacity-40 uppercase block mt-2">Le ${dateFormatted}</span>
+                    </div>
+                </div>
+
+                <div class="flex-grow space-y-4 mb-8">
+                    <p class="text-[10px] font-black opacity-30 uppercase tracking-[0.2em] border-b border-cat-pine/10 pb-2">Panier</p>
+                    ${itemsArray.map(item => `
+                        <div class="flex justify-between items-center text-base">
+                            <span class="text-cat-pine font-bold">
+                                ${item.title} 
+                                <br>
+                                <small class="text-cat-teal italic font-medium opacity-70 text-xs">(${item.variant})</small>
+                            </span>
+                            <span class="bg-cat-pine text-white px-3 py-1 rounded-lg font-black text-sm">
+                                x${item.quantity}
+                            </span>
+                        </div>
+                    `).join('')}
+
+                    <div class="mt-4 pt-2 border-t border-cat-pine/5 flex justify-end">
+                        <div class="bg-cat-teal/10 px-4 py-2 rounded-full flex items-center gap-2">
+                            <span class="text-[10px] font-black text-cat-teal uppercase tracking-widest">Total articles</span>
+                            <span class="bg-cat-teal text-white w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black">
+                                ${totalPlats}
+                            </span>
+                        </div>
+                    </div>
+                    
+                    ${order.note ? `
+                        <div class="mt-6 p-4 bg-cat-yellow/10 rounded-2xl border border-cat-yellow/30 relative">
+                            <span class="absolute -top-2 left-4 bg-cat-yellow text-cat-pine text-[8px] font-black px-2 py-0.5 rounded-full">NOTE</span>
+                            <p class="text-sm italic text-cat-pine/90 leading-relaxed">"${order.note}"</p>
+                        </div>
+                    ` : ''}
+                </div>
+
+                <div class="mt-auto pt-6 border-t-2 border-dashed border-cat-pine/10">
+                    <div class="flex justify-between items-end mb-6">
+                        <div class="flex flex-col">
+                            <span class="text-[10px] font-black opacity-30 uppercase tracking-widest leading-none mb-1">Total à payer</span>
+                            <span class="text-3xl font-black text-cat-pine">${order.total}€</span>
+                        </div>
+                        <span class="text-[9px] font-bold opacity-30 italic">Reçue à ${dateCreation}</span>
+                    </div>
+                    <button 
+                        onclick="window.completeOrder('${order.id}', '${order.telephone}', ${order.items.length})"
+                        class="w-full bg-cat-pine text-white py-5 rounded-[1.5rem] font-black text-xs uppercase tracking-[0.2em] hover:bg-cat-teal active:scale-95 transition-all shadow-xl shadow-cat-pine/20"
+                    >
+                        Encaisser & Créditer
+                    </button>
+                </div>
+            `;
+            return card;
+        }
+
+        // --- 2. LOGIQUE INITIALE & AUTH ---
+        async function startAdmin() {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) return window.location.replace('/admin/login');
+            
+            document.documentElement.style.visibility = 'visible';
+            const grid = document.getElementById('orders-grid');
+            const badge = document.getElementById('status-badge');
+
+            const refreshOrders = async () => {
+                const { data: orders, error } = await supabase
+                    .from('commandes')
+                    .select('*')
+                    .not('statut', 'in', '("paye","annule")') 
+                    .order('date_retrait', { ascending: true })
+                    .order('heure_retrait', { ascending: true });
+
+                if (error) return console.error(error);
+
+                if (grid) {
+                    grid.innerHTML = ''; 
+                    if (orders && orders.length > 0) {
+                        document.getElementById('empty-state')?.classList.add('hidden');
+                        orders.forEach(order => grid.appendChild(createOrderCard(order)));
+                    } else {
+                        document.getElementById('empty-state')?.classList.remove('hidden');
+                    }
+                }
+            };
+
+            await refreshOrders();
+
+            supabase.channel('admin-orders').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'commandes' }, refreshOrders).subscribe();
+            
+            // --- LOGIQUE MODAL HISTORIQUE ---
+            const historyModal = document.getElementById('history-modal');
+            const historyList = document.getElementById('history-list');
+
+            window.loadHistory = async () => {
+                const { data: cancelled } = await supabase
+                    .from('commandes')
+                    .select('*')
+                    .eq('statut', 'annule')
+                    .order('created_at', { ascending: false });
+
+                if (historyList) {
+                    // --- MODIFICATION ICI ---
+                    if (!cancelled || cancelled.length === 0) {
+                        historyList.innerHTML = `
+                            <div class="flex flex-col items-center justify-center py-12 opacity-30">
+                                <span class="text-4xl mb-3">🍃</span>
+                                <p class="text-xs font-black uppercase tracking-widest text-cat-pine">La corbeille est vide</p>
+                            </div>
+                        `;
+                        return;
+                    }
+
+                    historyList.innerHTML = cancelled.map(o => `
+                        <div id="history-item-${o.id}" class="bg-white p-6 rounded-2xl border border-cat-pine/5 flex justify-between items-center shadow-sm">
+                            <div>
+                                <p class="font-black text-cat-pine">${o.nom_client}</p>
+                                <p class="text-[10px] font-bold opacity-40 uppercase tracking-widest">${o.heure_retrait} • ${o.total}€</p>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button onclick="window.restoreOrder('${o.id}')" class="bg-cat-teal text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-all">Rétablir</button>
+                                <button onclick="window.permanentlyDeleteOrder('${o.id}')" class="bg-red-50 text-red-400 p-2 rounded-xl hover:bg-red-500 hover:text-white transition-all border border-red-100">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            };
+
+            document.getElementById('open-history')?.addEventListener('click', () => { window.loadHistory(); historyModal?.classList.remove('hidden'); });
+            document.getElementById('close-history-btn')?.addEventListener('click', () => historyModal?.classList.add('hidden'));
+            document.getElementById('close-history-overlay')?.addEventListener('click', () => historyModal?.classList.add('hidden'));
+        }
+
+        // --- 3. ACTIONS WINDOW ---
+        window.deleteOrder = async (orderId) => {
+            if (!confirm("Envoyer cette commande à la corbeille ?")) return;
+            await supabase.from('commandes').update({ statut: 'annule' }).eq('id', orderId);
+            document.getElementById(`order-${orderId}`)?.remove();
+            if (document.getElementById('orders-grid')?.children.length === 0) document.getElementById('empty-state')?.classList.remove('hidden');
+        };
+
+        window.restoreOrder = async (orderId) => {
+            await supabase.from('commandes').update({ statut: 'nouveau' }).eq('id', orderId);
+            location.reload(); 
+        };
+
+        window.completeOrder = async (orderId, phone, pointsToAdd) => {
+            if (!confirm(`Confirmer le paiement ?\n+${pointsToAdd} points pour le client.`)) return;
+            const card = document.getElementById(`order-${orderId}`);
+            if (card) card.style.opacity = "0.3";
+
+            await supabase.from('commandes').update({ statut: 'paye' }).eq('id', orderId);
+
+            const { data: profile } = await supabase.from('profils').select('points_fidelite').eq('telephone', phone).maybeSingle();
+            if (profile) {
+                await supabase.from('profils').update({ points_fidelite: profile.points_fidelite + pointsToAdd }).eq('telephone', phone);
+            } else {
+                await supabase.from('profils').insert([{ telephone: phone, points_fidelite: pointsToAdd }]);
+            }
+            card?.remove();
+            if (document.getElementById('orders-grid')?.children.length === 0) document.getElementById('empty-state')?.classList.remove('hidden');
+        };
+
+        // Action : Suppression RÉELLE dans Supabase
+        window.permanentlyDeleteOrder = async (orderId) => {
+            if (!confirm("Attention : Cette commande sera supprimée définitivement de la base de données. Confirmer ?")) return;
+
+            const { error } = await supabase
+                .from('commandes')
+                .delete()
+                .eq('id', orderId);
+
+            if (error) return alert("Erreur lors de la suppression définitive");
+
+            // Retirer l'élément de la liste visuelle sans recharger toute la modal
+            document.getElementById(`history-item-${orderId}`)?.remove();
+            
+            // Si c'était le dernier item, on affiche le message "vide"
+            if (historyList && historyList.children.length === 0) {
+                historyList.innerHTML = '<p class="text-center opacity-40 italic py-10">Corbeille vide</p>';
+            }
+        };
+
+        function updateClock() {
+            const clock = document.getElementById('live-clock');
+            if (clock) clock.textContent = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            startAdmin();
+            updateClock();
+            setInterval(updateClock, 1000);
+        });
+    </script>
+</Layout>

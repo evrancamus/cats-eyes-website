@@ -1,0 +1,2174 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { getCollection } from 'astro:content';
+import { supabase } from '../lib/supabase'; // Vérifie bien que le chemin est correct
+
+const allProducts = await getCollection('menu');
+const categories = ["Tout", "Soupes", "Plats", "Desserts", "Hors d'œuvres"];
+const restaurantName = "Cat's Eyes";
+
+// --- 1. Récupération des plats complets épuisés ---
+const { data: stocksEpuisesData } = await supabase
+  .from('stocks')
+  .select('product_slug')
+  .eq('en_stock', false);
+
+// On crée le tableau des IDs épuisés (ex: ["banh-cuon.md"])
+const slugsEpuises = stocksEpuisesData?.map(s => s.product_slug) || [];
+
+// --- 2. Récupération des ingrédients globaux épuisés ---
+const { data: globalEpuisesData } = await supabase
+  .from('stocks')
+  .select('product_slug')
+  .filter('product_slug', 'like', 'global:%')
+  .eq('en_stock', false);
+
+// Ajoute .toLowerCase() par sécurité
+const ingredientsEpuises = globalEpuisesData?.map(s => 
+    s.product_slug.split(':')[1].replace(/-/g, ' ').toLowerCase()
+) || [];
+
+// 1. On définit les données du slider ADN
+const slides = [
+{
+	image: "/images/concept-1.webp",
+	title: "Naly et son équipe pour vous servir !",
+	subtitle: "L'ADN Cat's Eyes",
+	icon: "/icons/sun-hand-drawn-irregular-shape.png",
+    color: "#FFD700",
+    description: "Toujours Souriante et bienveillante, Naly est propriétaire du restaurant depuis 2021, elle vous accueillera toutes les semaines entre Mardi et Samedi de 12h30 et 19h!"
+},
+{
+	image: "/images/concept-2.webp",
+	title: "100% frais, <br> 100% fait maison ! ",
+	subtitle: "L'ADN Cat's Eyes",
+	icon: "/icons/healthy.png",
+    color: "#126b13",
+    description: "Toutes nos recettes sont cuisinées minute, à partir d'ingrédients frais et de qualité.<br><br>Nos soupes et bouillons mijotent plus de 12h pour vous offrir une authenticité rare et une véritable expérience sensorielle !"
+},
+{
+	image: "/images/concept-4.webp",
+	title: "Propreté et soin impeccables !",
+	subtitle: "L'ADN Cat's Eyes",
+	icon: "/icons/health.png",
+    color: "#388fa2",
+    description: "Nous appliquons une rigueur intarissable concernant la propreté de nos espaces d'accueil.<br><br>Chacune de nos présentations est fignolée avec la plus grande attention !"
+},
+{
+	image: "/images/concept-3.webp",
+	title: "Un lieu vivant, et chaleureux !",
+	subtitle: "L'ADN Cat's Eyes",
+	icon: "/icons/soup-hand-drawn-hot-food-bowl.png",
+    color: "#e472e0",
+    description: "Musique, couleurs, douceur...<br>On se sent bien chez nous ! <br> <br>Nous avons travaillé chaque petit détail pour créer une atmosphère douce, et relaxante... Venez vous détendre et rencontrer Light, notre mascotte !"
+},
+{
+	image: "/images/concept-5.webp",
+	title: "Des instruments à disposition !",
+	subtitle: "L'ADN Cat's Eyes",
+	icon: "/icons/musical-note-hand-drawn-outline.png",
+    color: "#FFD700",
+    description: "Un piano tout jaune tout neuf, guitare et percussion à disposition... <br><br> Vous pouvez aussi amener vos propres instruments si vous voulez Jammer !"
+},
+{
+	image: "/images/concept-6.webp",
+	title: "Club d'échec en devenir !",
+	subtitle: "L'ADN Cat's Eyes",
+	icon: "/icons/strategy.png",
+    color: "#388fa2",
+    description: "Que c'est agréable de profiter d'une bonne partie d'échecs en se rafraîchissant d'un bon jus pressé minute... Ou une soupe... Ou les deux !<br> <br> Nos jeux sont en libre service."
+},
+];
+---
+<Layout title="Accueil">
+	
+	<header class="bg-cat-yellow py-4 px-6 sticky top-0 z-50 shadow-md">
+		<div class="max-w-7xl mx-auto flex justify-between items-center">
+			<a href="/" class="flex items-center gap-3">
+				<img src="images/CE-picto-nobackground.png" alt="Logo" class="h-10 w-10 border-cat-pine" />
+				<div class="flex flex-col">
+					<span class="font-black text-cat-pine leading-none text-xl">CAT'S EYES</span>
+					<span class="text-[10px] font-bold text-cat-pine/70 uppercase tracking-tighter">Jus • Soupes • Traiteur</span>
+				</div>
+			</a>
+
+			<div class="flex items-center gap-6">
+				<nav id="menu-nav" class="hidden lg:flex items-center gap-8 font-bold text-cat-pine uppercase text-sm tracking-widest">
+					<a href="#adn" class="hover:text-white hover:-translate-y-0.5 transition-all text-xs lg:text-sm">Notre ADN</a>
+					<a href="#menu" class="hover:text-white hover:-translate-y-0.5 transition-all text-xs lg:text-sm">La Carte</a>
+					<a href="#jus" class="hover:text-white hover:-translate-y-0.5 transition-all text-xs lg:text-sm">Les Jus</a>
+					<a href="#traiteur" id="menu-link-traiteur" class="hover:text-white transition-colors">Traiteur</a>
+					<a href="#traiteur" id="menu-link-ateliers" class="hover:text-white transition-colors">Ateliers</a>
+				</nav>
+
+				<div class="flex items-center gap-2 lg:gap-4">
+					<div class="hidden sm:flex items-center border-r border-cat-pine/20 pr-4 mr-2 gap-3">
+						<a href="https://www.instagram.com/catseyesjusetsoupesorleans/" target="_blank" class="text-cat-pine hover:text-white hover:scale-110 transition-all" aria-label="Instagram">
+							<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
+						</a>
+						<a href="https://www.facebook.com/Nfl45CatsEyes/" target="_blank" class="text-cat-pine hover:text-white hover:scale-110 transition-all" aria-label="Facebook">
+							<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg>
+						</a>
+					</div>
+
+					<div class="flex items-center gap-2">
+						<button id="open-profile" class="text-cat-pine p-2 hover:bg-cat-pine/10 hover:scale-105 rounded-full transition-all group relative">
+							<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+							</svg>
+						</button>
+
+						<button id="open-cart" class="relative bg-cat-pine text-white p-3 rounded-2xl shadow-lg hover:scale-105 transition-all active:scale-95 group">
+							<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+							</svg>
+							<span id="cart-count" class="absolute -top-2 -right-2 bg-cat-teal text-white text-[10px] font-black w-5 h-5 rounded-full flex items-center justify-center border-2 border-cat-yellow hidden">0</span>
+						</button>
+					</div>
+
+					<button id="menu-btn" class="lg:hidden text-cat-pine p-2">
+						<svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
+						</svg>
+					</button>
+				</div>
+			</div>
+
+			<div id="mobile-menu" class="hidden flex-col gap-4 mt-4 py-4 border-t border-cat-pine/10 lg:hidden font-bold text-cat-pine uppercase text-center">
+				<a href="#adn" class="py-2">Notre ADN</a>
+				<a href="#menu" class="py-2">La Carte</a>
+				<a href="#jus" class="py-2">Les Jus</a>
+				<a href="#traiteur" class="py-2">Traiteur & Ateliers</a>
+				<div class="flex justify-center gap-6 py-4 border-t border-cat-pine/5 mt-2">
+					<a href="https://www.instagram.com/catseyesjusetsoupesorleans/" target="_blank" class="text-cat-pine">Instagram</a>
+					<a href="https://www.facebook.com/Nfl45CatsEyes/" target="_blank" class="text-cat-pine">Facebook</a>
+				</div>
+			</div>
+		</div>
+	</header>
+
+	<section class="w-full bg-cat-pine overflow-x-hidden"> 
+		<div class="relative w-full"> 
+			
+			<div id="hero-container" class="relative aspect-[9/14] md:aspect-auto md:h-[89vh] overflow-hidden shadow-2xl">				<img 
+				src="/images/hero.webp" 
+				alt="Façade Cat's Eyes Orléans" 
+				class="w-full h-full object-cover animate-slow-zoom hover:brightness-110 transition-all duration-300" 
+				style="object-position: center 0%;" 
+				/>
+				
+				<div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20 md:bg-black/20"></div>
+
+				<div class="absolute inset-0 flex flex-col justify-end md:justify-center p-8 md:p-16 text-center">
+					
+					<div class="max-w-3xl mx-auto w-full">
+						<p 
+							class="text-white text-xl md:text-4xl font-medium italic leading-tight 
+								px-8 py-6 -mt-24 mb-12 md:mt-20 md:mb-35
+								bg-white/[0.09] backdrop-blur-[4px] rounded-2xl border border-white/10 shadow-2xl
+								animate-fade-in-up
+								hover:bg-white/[0.15] hover:scale-[1.02] hover:border-white/30 transition-all duration-500 cursor-default"
+							style="text-shadow: 0 2px 10px rgba(0,0,0,0.6), 0 0 20px rgba(0,0,0,0.3);"
+						>
+							"Cantine & Traiteur Asiatique Authentique au cœur d'Orléans."
+						</p>
+												
+						<div class="flex flex-col sm:flex-row gap-4 justify-center items-center pb-8 md:pb-0 animate-fade-in-up-delayed">
+							
+							<a href="#menu" class="bg-cat-pine text-white w-full sm:w-auto px-10 py-4 rounded-full font-bold shadow-2xl 
+								transition-all duration-300 transform
+								hover:scale-105 hover:shadow-cat-pine/20 hover:brightness-110
+								active:scale-95 text-base md:text-lg text-center border-2 border-transparent">
+								Je mange sur place ou à emporter
+							</a>
+							
+							<a href="#traiteur" class="backdrop-blur-md text-white border border-white/20 w-full sm:w-auto px-10 py-4 rounded-full font-bold shadow-2xl
+								transition-all duration-300 transform
+								hover:scale-105 hover:bg-cat-yellow hover:border-white/50
+								active:scale-95 text-base md:text-lg text-center">
+								Je prépare un événement
+							</a>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<style>
+	/* --- ANIMATIONS CUSTOM --- */
+
+	/* Apparition vers le haut */
+	@keyframes fadeInUp {
+		from {
+		opacity: 0;
+		transform: translateY(30px);
+		}
+		to {
+		opacity: 1;
+		transform: translateY(0);
+		}
+	}
+
+	/* Zoom lent sur l'image de fond */
+	@keyframes slowZoom {
+		from {
+		transform: scale(1);
+		}
+		to {
+		transform: scale(1.1);
+		}
+	}
+
+	.animate-fade-in-up {
+		animation: fadeInUp 0.8s ease-out forwards;
+	}
+
+	.animate-fade-in-up-delayed {
+		opacity: 0;
+		animation: fadeInUp 0.8s ease-out 0.4s forwards;
+	}
+
+	.animate-slow-zoom {
+		animation: slowZoom 20s linear infinite alternate;
+	}
+	</style>
+	
+	<section id="traiteur" class="w-full bg-cat-wood py-20 px-6 overflow-hidden">
+		<div class="max-w-7xl mx-auto flex flex-col lg:flex-row gap-12 items-start">
+			
+			<div class="w-full lg:w-3/5 relative group">
+				
+				<button id="traiteur-prev" class="hidden lg:flex absolute -left-6 top-1/2 -translate-y-1/2 z-40 bg-white p-4 rounded-full shadow-2xl text-cat-pine hover:bg-cat-yellow transition-all duration-300 pointer-events-none opacity-0">
+					<svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M15 19l-7-7 7-7" />
+					</svg>
+				</button>
+
+				<button id="traiteur-next" class="hidden lg:flex absolute -right-6 top-1/2 -translate-y-1/2 z-40 bg-white p-4 rounded-full shadow-2xl text-cat-pine hover:bg-cat-yellow transition-all duration-300 opacity-0 group-hover:opacity-100">
+					<svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 5l7 7-7 7" />
+					</svg>
+				</button>
+
+				<div id="traiteur-carousel" class="flex gap-4 overflow-x-auto snap-x snap-mandatory scrollbar-hide pb-6 scroll-smooth">
+					{[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((i, index) => (
+						<div class="min-w-[85%] md:min-w-[60%] lg:min-w-[70%] aspect-[4/5] snap-center">
+							<div class="w-full h-full bg-cat-pine/10 rounded-[2.5rem] overflow-hidden shadow-xl border-4 border-white transition-all duration-500">
+								<img 
+									src={`/images/traiteur-${i}.webp`} 
+									class="w-full h-full object-cover transition-opacity duration-500" 
+									data-index={index}
+									loading="lazy" 
+								/>
+							</div>
+						</div>
+					))}
+				</div>
+
+				<div id="swipe-indicator" class="absolute inset-0 z-40 flex items-center justify-center pointer-events-none transition-opacity duration-700 opacity-0">
+					<div class="bg-black/20 rounded-full p-8">
+						<div class="animate-hand-swipe text-white">
+							<svg xmlns="http://www.w3.org/2000/svg" class="w-16 h-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5a1.5 1.5 0 013 0v1m0 0V11" />
+							</svg>
+						</div>
+						<p class="text-white text-[10px] font-bold uppercase tracking-[0.2em] text-center mt-2">Balayez</p>
+					</div>
+				</div>
+			</div>
+
+			<div class="w-full lg:w-2/5 lg:sticky lg:top-32">
+				
+				<div class="flex flex-wrap items-center gap-3 mb-10">
+					<button id="tab-traiteur" class="px-6 py-2 rounded-full font-black text-[10px] uppercase tracking-widest transition-all duration-500 border-2 border-cat-pine/10 shadow-sm bg-cat-yellow text-cat-pine">
+						Traiteur & Evénementiel
+					</button>
+					
+					<button id="tab-cours" class="px-6 py-2 rounded-full font-black text-[10px] uppercase tracking-widest transition-all duration-500 border-2 border-cat-pine/10 shadow-sm bg-transparent text-cat-pine/40 hover:text-cat-pine hover:bg-cat-pine/5">
+						Ateliers Culinaires
+					</button>
+				</div>
+
+				<h2 id="service-title" class="text-4xl md:text-5xl font-bold text-cat-pine italic mb-8 leading-tight transition-all duration-500">
+					L'art de recevoir, <br/> façon Cat's Eyes.
+				</h2>
+
+				<div class="space-y-6 text-cat-pine/80 text-lg leading-relaxed italic">
+					<p id="service-desc" class="transition-all duration-500">Que ce soit pour un séminaire d'entreprise à Orléans ou une fête privée, nous transformons vos événements en expériences sensorielles... dans nos locaux ou ailleurs !</p>
+					<p id="service-subdesc" class="transition-all duration-500">Brochettes de fruits givrés, hors-d'œuvre asiatiques raffinés, plateaux de jus pressés à la minute, soupes signatures et plein d'autres plats succulents !</p>
+				</div>
+
+				<div class="mt-12 flex flex-col gap-4">
+					<a id="service-btn-wa" href="https://wa.me/33762351391?text=Bonjour,%20je%20souhaite%20des%20infos%20sur%20le%20service%20traiteur" target="_blank" class="bg-cat-pine text-white text-center px-10 py-5 rounded-full font-bold text-lg shadow-xl hover:bg-cat-teal transition-all active:scale-95 duration-500">
+						<span id="service-label-wa">Discuter sur WhatsApp</span>
+					</a>
+					<p class="text-xs text-center text-cat-pine/50 uppercase font-bold tracking-widest">Réponse sous 24h</p>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<script define:vars={{ slides }}>
+		const serviceData = {
+			traiteur: {
+				title: "L'art de recevoir, <br/> façon Cat's Eyes.",
+				desc: "Que ce soit pour un séminaire d'entreprise à Orléans ou une fête privée, nous transformons vos événements en expériences sensorielles... dans nos locaux ou ailleurs !",
+				subDesc: "Brochettes de fruits givrés, hors-d'œuvre asiatiques raffinés, plateaux de jus pressés à la minute, soupes signatures et plein d'autres plats succulents !",
+				btn: "Discuter sur WhatsApp",
+				waMsg: "Bonjour, je souhaite des infos sur le service traiteur",
+				images: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(i => `/images/traiteur-${i}.webp`)
+			},
+			cours: {
+				title: "Partagez un moment Authentique!",
+				desc: "Plongez dans l'univers de la cuisine traditionelle d'Asie du Sud-Est lors de nos cours de cuisine à Orléans. Venez partager notre univers au travers d'une expérience créative, atypique et conviale !",
+				subDesc: "Ateliers en petits groupes, matériel fourni et dégustation dans une ambiance chaleureuse.",
+				btn: "Réserver un atelier",
+				waMsg: "Bonjour, j'aimerais connaître les prochaines dates des cours de cuisine",
+				images: [1, 2, 3].map(i => `/images/atelier-${i}.webp`)
+			}
+		};
+
+		const carousel = document.getElementById('traiteur-carousel');
+		const prevBtn = document.getElementById('traiteur-prev');
+		const nextBtn = document.getElementById('traiteur-next');
+		const swipeIndicator = document.getElementById('swipe-indicator');
+		
+		const tabTraiteur = document.getElementById('tab-traiteur');
+		const tabCours = document.getElementById('tab-cours');
+		
+		const serviceTitle = document.getElementById('service-title');
+		const serviceDesc = document.getElementById('service-desc');
+		const serviceSubDesc = document.getElementById('service-subdesc');
+		const serviceBtnWA = document.getElementById('service-btn-wa');
+		const serviceLabelWA = document.getElementById('service-label-wa');
+
+		let currentService = 'traiteur';
+
+		// --- FONCTION OUTIL : AFFICHAGE DE LA MAIN ---
+		let swipeTimer; // Mémoire pour le minuteur
+
+        const showSwipe = () => {
+            if (!swipeIndicator) return;
+
+            // 1. On annule le minuteur précédent s'il existe pour éviter le bug de coupure
+            clearTimeout(swipeTimer);
+
+            // 2. On affiche
+            swipeIndicator.style.display = 'flex';
+            // Petit délai pour forcer le navigateur à voir le display:flex avant l'opacité
+            requestAnimationFrame(() => {
+                swipeIndicator.classList.remove('opacity-0');
+                swipeIndicator.classList.add('opacity-100');
+            });
+            
+            // 3. On programme la disparition
+            swipeTimer = setTimeout(() => {
+                swipeIndicator.classList.replace('opacity-100', 'opacity-0');
+                setTimeout(() => { 
+                    // On ne le cache que s'il est toujours en mode "disparition"
+                    if (swipeIndicator.classList.contains('opacity-0')) {
+                        swipeIndicator.style.display = 'none'; 
+                    }
+                }, 700);
+            }, 3000); // 3 secondes d'affichage bien pleines
+        };
+
+        // L'OBSERVER (On ajoute une sécurité pour ne pas le spammer au scroll)
+        let lastScrollTrigger = 0;
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                const now = Date.now();
+                if (entry.isIntersecting && now - lastScrollTrigger > 5000) {
+                    showSwipe();
+                    lastScrollTrigger = now; // On ne le relance pas avant 5 sec au scroll
+                }
+            });
+        }, { threshold: 0.4 });
+
+		// --- 1. LOGIQUE DE MISE À JOUR DES ONGLETS ---
+		const updateService = (newService) => {
+			if (newService === currentService) return;
+			
+			currentService = newService;
+			const data = serviceData[currentService];
+
+			if (currentService === 'traiteur') {
+				tabTraiteur.className = "px-6 py-2 rounded-full font-black text-[10px] uppercase tracking-widest transition-all duration-500 border-2 border-cat-pine/10 shadow-sm bg-cat-yellow text-cat-pine";
+				tabCours.className = "px-6 py-2 rounded-full font-black text-[10px] uppercase tracking-widest transition-all duration-500 border-2 border-cat-pine/10 shadow-sm bg-transparent text-cat-pine/40 hover:text-cat-pine";
+			} else {
+				tabCours.className = "px-6 py-2 rounded-full font-black text-[10px] uppercase tracking-widest transition-all duration-500 border-2 border-cat-pine/10 shadow-sm bg-cat-yellow text-cat-pine";
+				tabTraiteur.className = "px-6 py-2 rounded-full font-black text-[10px] uppercase tracking-widest transition-all duration-500 border-2 border-cat-pine/10 shadow-sm bg-transparent text-cat-pine/40 hover:text-cat-pine";
+			}
+
+			const els = [serviceTitle, serviceDesc, serviceSubDesc, serviceBtnWA];
+			els.forEach(el => { if(el) { el.style.opacity = '0'; el.style.transform = 'translateY(10px)'; } });
+
+			setTimeout(() => {
+				if(serviceTitle) serviceTitle.innerHTML = data.title;
+				if(serviceDesc) serviceDesc.innerText = data.desc;
+				if(serviceSubDesc) serviceSubDesc.innerText = data.subDesc;
+				if(serviceLabelWA) serviceLabelWA.innerText = data.btn;
+				if(serviceBtnWA) serviceBtnWA.href = `https://wa.me/33762351391?text=${encodeURIComponent(data.waMsg)}`;
+				
+				const slides = carousel.querySelectorAll('.snap-center');
+				slides.forEach((slide, idx) => {
+					const img = slide.querySelector('img');
+					if (data.images[idx]) {
+						img.src = data.images[idx];
+						slide.style.display = 'block';
+						img.style.opacity = '1';
+					} else {
+						slide.style.display = 'none';
+					}
+				});
+
+				els.forEach(el => { if(el) { el.style.opacity = '1'; el.style.transform = 'translateY(0)'; } });
+
+				carousel.scrollTo({ left: 0, behavior: 'smooth' });
+				
+				// APPEL DE LA MAIN AU CHANGEMENT
+				showSwipe(); 
+
+				if (typeof updateButtons === 'function') updateButtons();
+			}, 400);
+		};
+		
+		// --- LOGIQUE DE NAVIGATION DEPUIS LE MENU ---
+		const menuLinkAteliers = document.getElementById('menu-link-ateliers');
+		const menuLinkTraiteur = document.getElementById('menu-link-traiteur');
+
+		// Si on clique sur "ATELIERS" dans le menu
+		menuLinkAteliers?.addEventListener('click', () => {
+			updateService('cours');
+		});
+
+		// Si on clique sur "TRAITEUR" dans le menu
+		menuLinkTraiteur?.addEventListener('click', () => {
+			updateService('traiteur');
+		});
+
+		// Gestion de l'arrivée directe via URL (ex: catseyes.fr/#ateliers)
+		window.addEventListener('load', () => {
+			if (window.location.hash === '#ateliers') {
+				updateService('cours');
+				document.getElementById('traiteur')?.scrollIntoView({ behavior: 'smooth' });
+			}
+		});
+
+		tabTraiteur?.addEventListener('click', () => updateService('traiteur'));
+		tabCours?.addEventListener('click', () => updateService('cours'));
+
+		// --- 2. LOGIQUE CAROUSEL ---
+		if (carousel) {
+			const updateButtons = () => {
+				const scrollLeft = carousel.scrollLeft;
+				const maxScroll = carousel.scrollWidth - carousel.clientWidth;
+				if(prevBtn) prevBtn.style.display = (scrollLeft <= 5) ? 'none' : 'flex';
+				if(nextBtn) nextBtn.style.display = (scrollLeft >= maxScroll - 5) ? 'none' : 'flex';
+			};
+
+			nextBtn?.addEventListener('click', () => {
+				const item = carousel.querySelector('div');
+				carousel.scrollBy({ left: item.offsetWidth + 16, behavior: 'smooth' });
+			});
+
+			prevBtn?.addEventListener('click', () => {
+				const item = carousel.querySelector('div');
+				carousel.scrollBy({ left: -(item.offsetWidth + 16), behavior: 'smooth' });
+			});
+
+			carousel.addEventListener('scroll', updateButtons);
+			window.addEventListener('load', updateButtons);
+
+			// OBSERVER POUR LE RETOUR SUR LA SECTION
+			const observer = new IntersectionObserver((entries) => {
+				entries.forEach(entry => {
+					if (entry.isIntersecting) {
+						showSwipe();
+					}
+				});
+			}, { threshold: 0.4 });
+
+			observer.observe(carousel);
+		}
+	</script>
+
+	<style>
+		.scrollbar-hide::-webkit-scrollbar { display: none; }
+		.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
+		@keyframes sideways {
+			0%, 100% { transform: translateX(0); }
+			50% { transform: translateX(8px); }
+		}
+		.animate-sideways { animation: sideways 1.2s ease-in-out infinite; }
+
+		@keyframes pulse-white {
+			0% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7); }
+			70% { box-shadow: 0 0 0 15px rgba(255, 255, 255, 0); }
+			100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); }
+		}
+
+		@keyframes handSwipe {
+			0%, 100% { transform: translateX(10px) rotate(5deg); }
+			50% { transform: translateX(-10px) rotate(-5deg); }
+		}
+		.animate-hand-swipe { animation: handSwipe 2s ease-in-out infinite; }
+
+		@media (min-width: 1024px) {
+			.group:hover #traiteur-prev,
+			.group:hover #traiteur-next {
+				opacity: 1;
+				pointer-events: auto;
+			}
+		}
+	</style>
+
+	<section id="adn" class="w-full bg-white py-24 px-6 overflow-hidden">
+		<div class="max-w-7xl mx-auto flex flex-col lg:flex-row items-center gap-12 lg:gap-20">
+			
+			<div class="w-full lg:w-1/2 relative group px-4">
+				<button id="prev-btn" class="absolute left-0 top-1/2 -translate-y-1/2 z-20 bg-white/80 backdrop-blur-md p-3 rounded-full shadow-lg text-cat-pine hover:bg-cat-yellow transition-all opacity-0 group-hover:opacity-100 -translate-x-4 group-hover:translate-x-2">
+					<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
+				</button>
+
+				<div class="relative transform rotate-1 hover:rotate-0 transition-transform duration-500 shadow-2xl rounded-[3rem] overflow-hidden bg-white p-3 border border-cat-pine/5">
+					<div id="concept-carousel" class="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide rounded-[2.5rem] scroll-smooth">
+						{slides.map((slide, index) => (
+							<div class="min-w-full snap-center aspect-[4/5] md:aspect-square" data-index={index}>
+								<img src={slide.image} alt={slide.title} class="w-full h-full object-cover" />
+							</div>
+						))}
+					</div>
+
+					<div id="adn-swipe-hint" 
+						class="absolute inset-0 z-50 flex items-center justify-center pointer-events-none transition-opacity duration-500 opacity-0">
+						
+						<div class="bg-black/40 rounded-[3rem] p-5 flex flex-col items-center shadow-2xl border border-white/10">
+							<div class="animate-hand-swipe text-white">
+								<svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5a1.5 1.5 0 013 0v1m0 0V11" />
+								</svg>
+							</div>
+							<p class="text-white text-[10px] font-bold uppercase tracking-[0.3em] text-center mt-3">Balayez</p>
+						</div>
+					</div>
+				</div>
+
+				<button id="next-btn" class="absolute right-0 top-1/2 -translate-y-1/2 z-20 bg-white/80 backdrop-blur-md p-3 rounded-full shadow-lg text-cat-pine hover:bg-cat-yellow transition-all opacity-0 group-hover:opacity-100 translate-x-4 group-hover:-translate-x-2">
+					<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+				</button>
+			</div>
+
+			<div class="w-full lg:w-1/2">
+				<div id="carousel-content" class="max-w-[540px] mx-auto lg:ml-8 lg:mr-auto transition-opacity duration-300 opacity-100">
+					</div>
+			</div>
+		</div>
+	</section>	
+
+	<style is:global>
+	/* Animation d'entrée du texte (Slide + Fade) */
+	@keyframes textEntrance {
+		from { 
+		opacity: 0; 
+		transform: translateX(20px); 
+		}
+		to { 
+		opacity: 1; 
+		transform: translateX(0); 
+		}
+	}
+
+	.animate-text-entrance {
+		animation: textEntrance 0.5s ease-out forwards;
+	}
+
+	/* Effet de flottement léger au hover sur le bloc de texte */
+	.adn-text-block {
+		transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+	}
+
+	.adn-text-block:hover {
+		transform: translateY(-5px) scale(1.02) rotate(0.5deg) !important;
+		box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1) !important;
+	}
+	</style>
+
+	<script define:vars={{ slides }}>
+		const carousel = document.getElementById('concept-carousel');
+		const contentArea = document.getElementById('carousel-content');
+		const swipeHint = document.getElementById('adn-swipe-hint');
+		const slidesElements = carousel.querySelectorAll('[data-index]');
+		
+		let hasInteracted = false;
+		let isFirstScroll = true; 
+		let currentActiveIndex = "0"; // On garde en mémoire l'index affiché
+
+		// 1. MISE À JOUR DU CONTENU
+		function updateContent(index, animate = true) {
+			const data = slides[index];
+			const animationClass = animate ? 'animate-text-entrance' : '';
+			
+			contentArea.innerHTML = `
+				<div class="text-center lg:text-left ${animationClass}">
+					<h2 class="text-cat-teal font-black uppercase tracking-widest text-[11px] mb-4 italic">${data.subtitle}</h2>
+					<h3 class="text-4xl md:text-6xl font-bold text-cat-pine italic leading-tight mb-8 text-balance">${data.title}</h3>
+					
+					<div class="adn-text-block p-8 md:p-12 rounded-tr-[4rem] rounded-bl-[3rem] border-2 shadow-xl -rotate-1 relative transition-all duration-500 cursor-default" 
+						style="background-color: white; border-color: ${data.color};">
+						
+						<div class="absolute -top-6 -left-4 bg-white border-2 p-3 rounded-2xl shadow-lg rotate-12" style="border-color: ${data.color};">
+							<img src="${data.icon}" class="w-10 h-10 object-contain" alt="icon" />
+						</div>
+
+						<p class="text-cat-pine/90 text-lg md:text-xl leading-relaxed italic font-medium">"${data.description}"</p>
+						
+						<div class="mt-8 flex items-center gap-4 text-cat-pine/40 font-bold text-[10px] uppercase tracking-[0.2em]">
+							<span class="h-[1px] w-12" style="background-color: ${data.color};"></span>
+							L'engagement Cat's Eyes
+						</div>
+					</div>
+				</div>
+			`;
+		}
+
+		// Initialisation statique
+		updateContent(0, false);
+
+		const hideHint = () => {
+			if (!hasInteracted && swipeHint) {
+				hasInteracted = true;
+				swipeHint.classList.replace('opacity-100', 'opacity-0');
+				setTimeout(() => swipeHint.remove(), 700);
+			}
+		};
+
+		// 2. OBSERVER (Correction de la boucle d'animation)
+		const observer = new IntersectionObserver((entries) => {
+			entries.forEach(entry => {
+				if (entry.isIntersecting) {
+					const index = entry.target.getAttribute('data-index');
+					
+					// CONDITION CRUCIALE : On n'anime QUE si l'index a changé
+					// et que ce n'est pas le tout premier chargement de la page
+					if (index !== currentActiveIndex && !isFirstScroll) {
+						updateContent(index, true);
+						currentActiveIndex = index; // On met à jour l'index actuel
+					}
+					
+					if (isFirstScroll) {
+						isFirstScroll = false;
+						currentActiveIndex = index;
+					}
+					
+					if (!hasInteracted && swipeHint) {
+						swipeHint.classList.replace('opacity-0', 'opacity-100');
+						setTimeout(hideHint, 2700);
+					}
+				}
+			});
+		}, { threshold: 0.7 });
+
+		slidesElements.forEach(slide => observer.observe(slide));
+
+		// 3. NAVIGATION
+		carousel.addEventListener('scroll', () => {
+			hideHint();
+		}, { passive: true });
+
+		document.getElementById('next-btn').onclick = () => {
+			isFirstScroll = false;
+			carousel.scrollBy({ left: carousel.offsetWidth, behavior: 'smooth' });
+			hideHint();
+		};
+		document.getElementById('prev-btn').onclick = () => {
+			isFirstScroll = false;
+			carousel.scrollBy({ left: -carousel.offsetWidth, behavior: 'smooth' });
+			hideHint();
+		};
+	</script>
+	
+	<section id= "jus" class="w-full bg-cat-teal py-24 px-6 text-white overflow-hidden">
+		<div class="max-w-7xl mx-auto flex flex-col lg:flex-row items-center gap-16">
+			
+			<div class="w-full lg:w-1/2">
+				<span class="bg-white/20 px-4 py-1 rounded-full font-bold text-xs uppercase tracking-widest mb-6 inline-block">Concept Unique</span>
+				<h3 class="text-5xl font-bold italic mb-8">Vos jus, <br/> vos règles.</h3>
+				
+				<div class="space-y-6 text-xl italic opacity-90">
+					<p>À la barre des jus, c'est vous le chef ! Choisissez jusqu'à <strong>3 fruits ou légumes</strong> de saison parmi notre sélection du jour.</p>
+					<div class="flex gap-4 items-center">
+						<span class="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center font-bold">S</span>
+						<span class="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center font-bold">M</span>
+						<span class="w-16 h-16 rounded-full bg-white/30 flex items-center justify-center font-bold">L</span>
+					</div>
+					<p>Disponible en trois tailles, pressé à froid sous vos yeux pour garder 100% des vitamines.</p>
+				</div>
+			</div>
+
+			<div class="w-full lg:w-4/10 grid grid-cols-2 gap-4 rotate-3">
+				<div class="space-y-4">
+					<img src="/images/jus-1.webp" class="rounded-3xl shadow-xl border-4 border-white transition-transform duration-300 hover:scale-105" />
+					<img src="/images/jus-2.webp" class="rounded-3xl shadow-xl border-4 border-white transition-transform duration-300 hover:scale-105" />
+				</div>
+				<div class="space-y-4">
+					<img src="/images/jus-3.webp" class="rounded-3xl shadow-xl border-4 border-white transition-transform duration-300 hover:scale-105" />
+					<img src="/images/jus-4.webp" class="rounded-3xl shadow-xl border-4 border-white transition-transform duration-300 hover:scale-105" />
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<section id="menu" class="w-full py-24 bg-white px-6">
+		<div class="max-w-7xl mx-auto">
+			<div class="text-center mb-16">
+				<h2 class="text-cat-teal font-black uppercase tracking-widest text-[10px] mb-4 italic">La Carte</h2>
+				<h3 class="text-5xl font-bold text-cat-pine italic mb-12">Choisissez votre plaisir</h3>
+				
+				<div class="flex flex-wrap justify-center gap-4 mb-16">
+					{categories.map((cat) => (
+						<button 
+							class="filter-btn px-8 py-3 rounded-full border-2 border-cat-pine font-bold uppercase text-xs tracking-widest hover:bg-cat-yellow transition-all active:scale-95"
+							data-category={cat}
+						>
+							{cat}
+						</button>
+					))}
+				</div>
+			</div>
+
+			<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10" id="product-grid">
+				{allProducts.map((product) => {
+					const isEpuise = slugsEpuises.includes(product.id);
+					const isPreorder = product.data.preorder === true;
+
+					return (
+						<div 
+							class={`product-card group relative bg-white rounded-[2.5rem] border-2 border-cat-pine overflow-hidden shadow-lg transition-all flex flex-col ${isEpuise ? 'opacity-50 pointer-events-none' : 'hover:-translate-y-2'} ${isPreorder ? 'border-cat-teal/40 bg-cat-teal/[0.01]' : ''}`} 
+							data-category={product.data.category}
+							data-product-id={product.id} 
+						>
+							{/* --- IMAGE & TAGS --- */}
+							<div class="aspect-[4/3] overflow-hidden relative border-b-2 border-cat-pine">
+								<img 
+									id={`img-${product.id.replace(/[^a-zA-Z0-9]/g, '')}`}
+									src={product.data.image} 
+									alt={product.data.title} 
+									class={`product-img w-full h-full object-cover group-hover:scale-105 transition-all duration-500 ${isEpuise ? 'grayscale' : ''}`} 
+								/>
+								
+								{/* Badge "Victime de son succès" - Toujours présent dans le DOM */}
+								<div class={`victime-badge absolute inset-0 bg-cat-pine/20 flex items-center justify-center z-20 ${isEpuise ? '' : 'hidden'}`}>
+									<span class="bg-white text-cat-pine px-4 py-2 rounded-full font-black uppercase text-[10px] tracking-widest shadow-xl border-2 border-cat-pine rotate-[-5deg]">
+										Victime de son succès
+									</span>
+								</div>
+
+								<div class="absolute top-4 left-4 flex flex-wrap gap-2">
+									{product.data.tags?.map((tag) => (
+										<span class="px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider bg-white border border-cat-pine shadow-sm">
+											{tag}
+										</span>
+									))}
+								</div>
+							</div>
+
+							{/* --- CONTENU --- */}
+							<div class="p-8 flex-grow flex flex-col">
+								<div class="flex justify-between items-start mb-2">
+									<h4 class="text-2xl font-bold text-cat-pine italic leading-tight">{product.data.title}</h4>
+									<span class="text-xl font-black text-cat-teal">{product.data.price}€</span>
+								</div>
+
+								{/* DESCRIPTION */}
+								<div class="description-container mb-6">
+									<p class="product-description text-cat-pine/70 text-sm italic leading-relaxed line-clamp-3 whitespace-pre-line transition-all duration-300">
+										{product.data.description}
+									</p>
+									{/* On garde une sécurité sur la longueur, mais on cache le bouton par défaut */}
+									{product.data.description.length > 50 && (
+										<button class="toggle-description hidden text-[10px] font-bold text-cat-teal uppercase tracking-widest mt-1 hover:underline">
+											+ Voir plus
+										</button>
+									)}
+								</div>
+
+								{/* VARIANTES */}
+								{product.data.variant_groups && product.data.variant_groups.map((group) => (
+									<div class="mb-4">
+										<p class="text-[9px] font-black uppercase text-cat-teal/60 mb-2 tracking-widest italic">{group.group_name} :</p>
+										<div class="flex flex-wrap gap-2 group-container" data-group={group.group_name}>
+											{group.options.map((option) => (
+												<button 
+													type="button"
+													class={`variant-btn px-4 py-2 rounded-xl border-2 border-cat-pine text-[10px] font-black uppercase tracking-tighter bg-white text-cat-pine ${ingredientsEpuises.includes(option.name.toLowerCase()) ? 'opacity-30 line-through pointer-events-none' : ''}`}
+													data-target={`img-${product.id.replace(/[^a-zA-Z0-9]/g, '')}`}
+													data-image={option.image || product.data.image}
+												>
+													{option.name}
+												</button>
+											))}
+										</div>
+									</div>
+								))}
+
+								{/* SUPPLÉMENTS */}
+								{product.data.extras && product.data.extras.length > 0 && (
+									<div class="mb-6">
+										<p class="text-[9px] font-black uppercase text-cat-teal/60 mb-2 tracking-widest italic">Suppléments (Extra) :</p>
+										<div class="flex flex-wrap gap-2">
+											{product.data.extras.map((extra) => (
+												<button 
+													type="button"
+													class={`extra-btn px-3 py-1.5 rounded-xl border-2 border-dashed border-cat-pine/20 text-[10px] font-bold text-cat-pine bg-white flex items-center gap-1.5 ${ingredientsEpuises.includes(extra.name.toLowerCase()) ? 'opacity-30 line-through pointer-events-none' : ''}`}
+													data-extra-name={extra.name}
+													data-extra-price={extra.price}
+												>
+													<span>{extra.name}</span>
+													<span class="text-cat-teal">+{extra.price}€</span>
+												</button>
+											))}
+										</div>
+									</div>
+								)}
+
+								{/* ALLERGÈNES */}
+								{product.data.allergens && product.data.allergens.length > 0 && (
+									<div class="mb-6 p-4 bg-cat-pine/[0.03] rounded-2xl border border-cat-pine/10">
+										<p class="text-[9px] font-black uppercase text-cat-pine/60 mb-2 tracking-widest italic">Retirer des ingrédients :</p>
+										<div class="flex flex-wrap gap-2">
+											{product.data.allergens.map((allergen) => (
+												<button type="button" class="allergen-btn px-3 py-1.5 rounded-xl border-2 border-dashed border-cat-pine/20 text-[10px] font-bold text-cat-pine bg-white">
+													SANS {allergen}
+												</button>
+											))}
+										</div>
+									</div>
+								)}
+
+								{product.data.hasSpice && (
+									<div class="spice-container mb-6 px-2">
+										<div class="flex justify-between items-center mb-3">
+											<p class="text-[9px] font-black uppercase text-cat-pine/40 tracking-widest italic">
+												Intensité :
+											</p>
+											<span class="spice-level-text text-[10px] font-black text-red-600 uppercase italic">
+												Doux 🌿
+											</span>
+										</div>
+										
+										<div class="relative flex items-center">
+											<input 
+												type="range" 
+												min="0" 
+												max="3" 
+												step="1" 
+												value="0" 
+												class="spice-range w-full h-1.5 bg-white border border-cat-pine/10 rounded-full appearance-none cursor-pointer"
+											/>
+										</div>
+									</div>
+								)}
+
+								{/* FOOTER */}
+								<div class="mt-auto pt-4 border-t border-dashed border-cat-pine/10 flex justify-between items-center gap-2">
+									<div class="flex flex-col">
+										{/* Preorder logic - Toujours conditionnel car lié au temps, pas au stock live */}
+										{isPreorder && !isEpuise && (
+											<div class="preorder-badge flex items-center gap-2 bg-cat-teal/10 border border-cat-teal/20 px-3 py-1.5 rounded-xl shadow-sm">
+												<span class="animate-pulse text-xs">⏳</span>
+												<div class="flex flex-col">
+													<span class="text-[9px] font-black text-cat-teal uppercase leading-none">Sur Réservation</span>
+													<span class="text-[8px] text-cat-teal/70 font-bold uppercase tracking-tighter mt-0.5 italic">Avant 11h pour le Lendemain</span>
+												</div>
+											</div>
+										)}
+										
+										{/* Texte Indisponible - Géré en live via la classe hidden */}
+										<span class={`status-indisponible text-[10px] font-black uppercase tracking-widest text-cat-pine/40 italic ${isEpuise ? '' : 'hidden'}`}>
+											Indisponible
+										</span>
+									</div>
+									
+									<button 
+										class={`add-to-cart-btn bg-cat-pine text-white w-12 h-12 rounded-2xl flex items-center justify-center hover:bg-cat-teal shadow-lg active:scale-90 transition-all group/btn ${isEpuise ? 'hidden' : ''}`}
+										data-id={product.id}
+										data-title={product.data.title}
+										data-price={product.data.price}
+										data-preorder={isPreorder ? "true" : "false"}
+									>
+										<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 group-hover/btn:rotate-90 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+											<path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4" />
+										</svg>
+									</button>
+								</div>
+							</div>
+						</div>
+					);
+				})}
+			</div>
+		</div>
+	</section>
+
+	<style is:global>
+		/* 1. État de base */
+		.variant-btn, .extra-btn, .allergen-btn {
+			transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+			cursor: pointer;
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+		}
+
+		/* 2. Hover */
+		.variant-btn:not(.active-variant):hover, 
+		.extra-btn:not(.extra-selected):hover, 
+		.allergen-btn:not(.allergen-selected):hover {
+			transform: scale(1.08) translateY(-3px) !important;
+			box-shadow: 0 10px 15px -3px rgba(22, 78, 99, 0.2) !important;
+			z-index: 10;
+		}
+
+		/* 3. Sélection Variantes & Extras (JAUNE) */
+		.active-variant, .extra-selected {
+			background-color: #fef08a !important;
+			border-color: #164e63 !important;
+			border-style: solid !important;
+			color: #164e63 !important;
+			transform: scale(1.02) !important;
+		}
+
+		/* 4. Sélection Allergènes (VERT PINE + TEXTE BLANC) */
+		/* On utilise l'attribut class pour être plus fort que Tailwind */
+		[class*="allergen-selected"] {
+			background-color: #164e63 !important;
+			color: #ffffff !important;
+			border-style: solid !important;
+			border-color: #164e63 !important;
+			transform: scale(1.02) !important;
+		}
+
+		/* Sécurité ultime pour le texte des allergènes */
+		.allergen-btn.allergen-selected,
+		.allergen-btn.allergen-selected span {
+			color: #ffffff !important;
+		}
+
+		/* 5. État non-sélectionné */
+		.variant-btn:not(.active-variant),
+		.extra-btn:not(.extra-selected),
+		.allergen-btn:not(.allergen-selected) {
+			background-color: #ffffff !important;
+		}
+
+		/* 6. Animation du bouton VOIR PLUS */
+		.toggle-description {
+			position: relative;
+			overflow: hidden;
+		}
+
+		.toggle-description:hover {
+			color: #164e63 !important; /* Devient Pine au survol */
+			transform: translateX(5px) !important; /* Glisse légèrement */
+		}
+
+		/* Barre de soulignement animée */
+		.toggle-description::after {
+			content: '';
+			position: absolute;
+			bottom: 0;
+			left: 0;
+			width: 0;
+			height: 1px;
+			background-color: currentColor;
+			transition: width 0.3s ease;
+		}
+
+		.toggle-description:hover::after {
+			width: 100%;
+		}
+
+		/* Style de la barre (Track) */
+		.spice-range {
+			-webkit-appearance: none;
+			appearance: none;
+			background: #ffffff !important;
+			border: 1px solid rgba(22, 78, 99, 0.1) !important; /* Bordure très fine Pine */
+			height: 6px;
+			outline: none;
+		}
+
+		/* Le curseur (Thumb) pour Chrome/Safari */
+		.spice-range::-webkit-slider-thumb {
+			-webkit-appearance: none;
+			appearance: none;
+			width: 28px;
+			height: 28px;
+			cursor: pointer;
+			background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><text y='18' font-size='16'>🌶️</text></svg>");
+			background-repeat: no-repeat;
+			background-position: center;
+			background-color: transparent;
+			border: none;
+			transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+		}
+
+		/* Le curseur pour Firefox */
+		.spice-range::-moz-range-thumb {
+			width: 28px;
+			height: 28px;
+			cursor: pointer;
+			background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><text y='18' font-size='16'>🌶️</text></svg>");
+			background-repeat: no-repeat;
+			background-position: center;
+			background-color: transparent;
+			border: none;
+			transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+		}
+
+		/* Animation au survol ou clic */
+		.spice-range::-webkit-slider-thumb:hover, 
+		.spice-range:active::-webkit-slider-thumb {
+			transform: scale(1.3) rotate(-10deg);
+		}
+	</style>
+
+	<script>
+		import { supabase } from '../lib/supabase';
+
+		document.addEventListener('DOMContentLoaded', () => {
+			// --- 1. ÉTAT GLOBAL & OUTILS ---
+			let cart = [];
+			const targetPhone = "33631541175";
+
+			// Vérifie si l'utilisateur a accepté les cookies
+			const hasConsent = () => getCatCookie('catseyes_consent') === 'true';
+
+			const setCatCookie = (name, value, days = 30) => {
+				// Verrou RGPD : On n'écrit que si c'est le cookie de consentement OU si consenti
+				if (name === 'catseyes_consent' || hasConsent()) {
+					const date = new Date();
+					date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+					document.cookie = `${name}=${value}; expires=${date.toUTCString()}; path=/; SameSite=Lax`;
+				}
+			};
+
+			const getCatCookie = (name) => {
+				const value = `; ${document.cookie}`;
+				const parts = value.split(`; ${name}=`);
+				if (parts.length === 2) return parts.pop().split(';').shift();
+			};
+
+			// Gestion du type de commande
+			const typeBtns = document.querySelectorAll('.order-type-btn');
+			typeBtns.forEach(btn => {
+				btn.addEventListener('click', () => {
+					// 1. On remet tout le monde en "effacé"
+					typeBtns.forEach(b => {
+						b.classList.remove('active-type', 'opacity-100', 'border-cat-teal');
+						b.classList.add('opacity-60', 'text-cat-pine/30');
+						b.style.backgroundColor = 'white';
+					});
+					
+					// 2. On active le bouton cliqué (Fond blanc, texte Pine, bordure plus marquée)
+					btn.classList.add('active-type', 'opacity-100');
+					btn.classList.remove('text-cat-pine/30');
+					btn.classList.add('border-cat-pine'); // Ou border-cat-teal si tu veux le distinguer
+					
+					// On retire l'erreur visuelle si elle était là
+					document.getElementById('order-type-title').classList.remove('text-red-500', 'animate-bounce');
+				});
+			});
+
+			// --- 2. SÉLECTEURS UI ---
+			const elements = {
+				// Cookies & Légal
+				banner: document.getElementById('cookie-banner'),
+				acceptBtn: document.getElementById('accept-cookies'),
+				declineBtn: document.getElementById('decline-cookies'),
+
+				// Menu Mobile
+				menuBtn: document.getElementById('menu-btn'),
+				mobileMenu: document.getElementById('mobile-menu'),
+
+				// Panier (Interface)
+				openCart: document.getElementById('open-cart'),
+				cartModal: document.getElementById('cart-modal'),
+				closeCartBtn: document.getElementById('close-cart-btn'),
+				cartOverlay: document.getElementById('close-cart-overlay'),
+				cartCountBadge: document.getElementById('cart-count'),
+				cartItemsList: document.getElementById('cart-items-list'),
+				totalPrice: document.getElementById('cart-total-price'),
+
+				// Produits & Filtres
+				categoryBtns: document.querySelectorAll('.filter-btn'),
+				productCards: document.querySelectorAll('.product-card'),
+				variantBtns: document.querySelectorAll('.variant-btn'),
+				addToCartBtns: document.querySelectorAll('.add-to-cart-btn'),
+
+				// Envoi Commande (Boutons du Panier)
+				whatsappBtn: document.getElementById('send-order-whatsapp'),
+				smsBtn: document.getElementById('send-order-sms'),
+
+				// Profil & Fidélité
+				openProfile: document.getElementById('open-profile'),
+				profileModal: document.getElementById('profile-modal'),
+				closeProfileBtn: document.getElementById('close-profile-btn'),
+				profileOverlay: document.getElementById('close-profile-overlay'),
+				checkLoyaltyBtn: document.getElementById('check-loyalty'),
+
+				// Champs de saisie (Inputs)
+				clientNameInput: document.getElementById('client-name'),
+				clientPhoneInput: document.getElementById('client-phone'),
+				lookupPhoneInput: document.getElementById('lookup-phone'),
+
+				// Nouveau Modal de Confirmation Perso
+				confirmModal: document.getElementById('confirm-order-modal'),
+				confirmDetails: document.getElementById('confirm-details'),
+				finalWhatsappBtn: document.getElementById('final-whatsapp-btn'),
+				noWhatsappBtn: document.getElementById('no-whatsapp-btn'),
+				smsFallback: document.getElementById('sms-fallback-msg'),
+				cancelBtn: document.getElementById('cancel-confirm-btn'),
+				confirmAltBtn: document.getElementById('confirm-alt-btn')
+			};
+
+			// --- LOGIQUE DE FILTRAGE (VERSION TOLÉRANTE) ---
+			elements.categoryBtns.forEach(btn => {
+				btn.addEventListener('click', (e) => {
+					e.preventDefault();
+					// On récupère la valeur et on la nettoie
+					const rawFilter = btn.getAttribute('data-filter') || btn.getAttribute('data-category');
+					const filterValue = rawFilter ? rawFilter.trim().toLowerCase() : 'all';
+					
+					console.log("Btn cliqué:", filterValue);
+
+					// 1. Visuel des boutons
+					elements.categoryBtns.forEach(b => b.classList.remove('bg-cat-yellow'));
+					btn.classList.add('bg-cat-yellow');
+
+					// 2. Filtrage
+					elements.productCards.forEach(card => {
+						const rawCardCat = card.getAttribute('data-category');
+						const cardCategory = rawCardCat ? rawCardCat.trim().toLowerCase() : '';
+						
+						console.log("Vérif carte:", cardCategory, "vs", filterValue);
+
+						if (filterValue === "all" || filterValue === "tout" || cardCategory === filterValue) {
+							card.style.setProperty('display', 'flex', 'important');
+							card.classList.remove('hidden');
+							card.style.opacity = "1";
+						} else {
+							card.style.setProperty('display', 'none', 'important');
+							card.classList.add('hidden');
+						}
+					});
+				});
+			});
+
+			// On active le bouton "Tout" par défaut au démarrage
+			const defaultBtn = document.querySelector('[data-filter="all"]');
+			if (defaultBtn) defaultBtn.classList.add('bg-cat-yellow');
+
+			// --- 3. GESTION DES COOKIES & MÉMOIRE ---
+			const hideBanner = () => {
+				if (elements.banner) {
+					elements.banner.classList.add('opacity-0', 'translate-y-full');
+					setTimeout(() => { elements.banner.remove(); }, 500);
+				}
+			};
+
+			// Action : Accepter
+			elements.acceptBtn?.addEventListener('click', () => {
+				// 1. On crée le cookie de consentement
+				const date = new Date();
+				date.setTime(date.getTime() + (30 * 24 * 60 * 60 * 1000));
+				document.cookie = `catseyes_consent=true; expires=${date.toUTCString()}; path=/; SameSite=Lax`;
+				
+				// 2. Maintenant que c'est accepté, on sauvegarde les infos déjà saisies (si besoin)
+				updateCartUI(true); 
+				hideBanner();
+			});
+
+			elements.declineBtn?.addEventListener('click', hideBanner);
+
+			const restoreUserSession = () => {
+				// On ne cherche plus savedName ou savedPhone
+				
+				// On s'assure que les champs sont vides au chargement
+				if (elements.clientNameInput) elements.clientNameInput.value = '';
+				if (elements.clientPhoneInput) elements.clientPhoneInput.value = '';
+				if (elements.lookupPhoneInput) elements.lookupPhoneInput.value = '';
+
+				// On ne restaure QUE le panier
+				const savedCart = getCatCookie('ce_cart_items');
+				if (savedCart) {
+					try {
+						cart = JSON.parse(savedCart);
+						updateCartUI(false); 
+					} catch (e) { console.error("Erreur panier"); }
+				}
+			};
+
+			// --- 4. LOGIQUE DU PANIER ---
+			const updateCartUI = (shouldSave = true) => {
+				// Sauvegarde sécurisée (vérifie le consentement via setCatCookie)
+				if (shouldSave) {
+					setCatCookie('ce_cart_items', JSON.stringify(cart), 1);
+				}
+
+				// Mise à jour du badge (nombre d'articles)
+				if (elements.cartCountBadge) {
+					elements.cartCountBadge.textContent = cart.length.toString();
+					cart.length > 0 ? elements.cartCountBadge.classList.remove('hidden') : elements.cartCountBadge.classList.add('hidden');
+				}
+
+				// Affichage de la liste des produits
+				if (elements.cartItemsList) {
+					if (cart.length === 0) {
+						elements.cartItemsList.innerHTML = '<p class="text-center opacity-50 italic py-10">Panier vide...</p>';
+						elements.totalPrice.textContent = '0.00€';
+					} else {
+						let total = 0;
+						elements.cartItemsList.innerHTML = cart.map((item, index) => {
+							total += item.price;
+							return `
+								<div class="flex justify-between items-center bg-cat-yellow/10 p-4 rounded-2xl border border-cat-pine/5 mb-2">
+									<div class="flex-grow pr-4">
+										<p class="font-bold text-cat-pine text-sm">${item.title}</p>
+										
+										<p class="text-[10px] uppercase font-bold text-cat-teal leading-tight">
+											${item.variant}
+										</p>
+										
+										${item.allergens && item.allergens.length > 0 
+											? `<p class="text-[9px] font-black text-red-400 uppercase mt-1 tracking-tighter">
+												❌ SANS : ${item.allergens.join(', ')}
+											</p>` 
+											: ''
+										}
+									</div>
+									<div class="flex items-center gap-4">
+										<span class="font-black text-cat-pine text-sm">${item.price}€</span>
+										<button onclick="window.removeFromCart(${index})" class="text-red-400 p-2 hover:scale-110 transition-transform">✕</button>
+									</div>
+								</div>
+							`;
+						}).join('');
+						elements.totalPrice.textContent = `${total.toFixed(2)}€`;
+					}
+				}
+			};
+
+			// Suppression d'un article
+			window.removeFromCart = (index) => {
+				cart.splice(index, 1);
+				updateCartUI();
+			};
+
+			// --- 1. GESTION DES CLICS (Variantes, Suppléments & Descriptions) ---
+			document.addEventListener('click', (e) => {
+				
+				// On définit les cibles potentielles
+				const extraBtn = e.target.closest('.extra-btn');
+				const variantBtn = e.target.closest('.variant-btn');
+				const toggleBtn = e.target.closest('.toggle-description');
+
+				// CAS A : LES SUPPLÉMENTS
+				if (extraBtn) {
+					extraBtn.classList.toggle('extra-selected');
+					return; 
+				}
+
+				// CAS B : LES VARIANTES
+				if (variantBtn) {
+					e.preventDefault();
+					const container = variantBtn.closest('.group-container'); 
+					const targetImgId = variantBtn.getAttribute('data-target');
+					const newSrc = variantBtn.getAttribute('data-image');
+					const productImg = document.getElementById(targetImgId);
+
+					if (container) {
+						// 1. On retire l'état "actif" de tous les boutons du groupe uniquement
+						container.querySelectorAll('.variant-btn').forEach(b => {
+							b.classList.remove('active-variant', 'bg-cat-yellow');
+							b.classList.add('bg-white');
+						});
+						
+						// 2. On active le bouton cliqué
+						variantBtn.classList.add('active-variant', 'bg-cat-yellow');
+						variantBtn.classList.remove('bg-white');
+
+						// 3. Changement d'image fluide
+						if (productImg && newSrc && newSrc.trim() !== "") {
+							productImg.style.opacity = '0.5';
+							setTimeout(() => {
+								productImg.src = newSrc;
+								productImg.style.opacity = '1';
+							}, 100);
+						}
+					}
+					return;
+				}
+
+				// CAS C : LE "VOIR PLUS" DES DESCRIPTIONS
+				if (toggleBtn) {
+					e.preventDefault();
+					const container = toggleBtn.closest('.description-container');
+					const text = container.querySelector('.product-description');
+					const isExpanded = text.classList.contains('line-clamp-none');
+					
+					if (isExpanded) {
+						text.classList.remove('line-clamp-none');
+						text.classList.add('line-clamp-3');
+						toggleBtn.textContent = '+ Voir plus';
+					} else {
+						text.classList.remove('line-clamp-3');
+						text.classList.add('line-clamp-none');
+						toggleBtn.textContent = '- Réduire';
+					}
+				}
+
+				// CAS D : CLIC SUR UN ALLERGÈNE
+				const allergenBtn = e.target.closest('.allergen-btn');
+				if (allergenBtn) {
+					e.preventDefault(); // Sécurité
+					// On bascule UNIQUEMENT la classe de sélection
+					// Le CSS se chargera de changer les couleurs grâce au !important
+					allergenBtn.classList.toggle('allergen-selected');
+					return; // On arrête là
+				}
+			});
+
+			// --- GESTION DES JAUGES DE PIMENT ---
+			const spiceLabels = ["Pas de Piment 🌿", "Doux 🌶️", "Relevé 🌶️🌶️", "Lave 🌋"];
+
+			// On utilise la délégation d'événement pour que ça marche même si on ajoute des plats dynamiquement
+			document.addEventListener('input', (e) => {
+				if (e.target.classList.contains('spice-range')) {
+					const container = e.target.closest('.spice-container') || e.target.closest('div.mb-6');
+					const textLabel = container?.querySelector('.spice-level-text');
+					if (textLabel) {
+						textLabel.textContent = spiceLabels[e.target.value];
+						
+						// Effet visuel pour le niveau max
+						if (e.target.value == 3) {
+							textLabel.classList.add('animate-pulse', 'text-red-700');
+						} else {
+							textLabel.classList.remove('animate-pulse', 'text-red-700');
+						}
+					}
+				}
+			});
+
+			// --- 2. Mise à jour du bouton d'ajout au panier ---
+			elements.addToCartBtns.forEach(btn => {
+				btn.addEventListener('click', () => {
+					const card = btn.closest('.product-card');
+					if (!card) return;
+
+					// --- 1. VÉRIFICATION DES SÉLECTIONS OBLIGATOIRES ---
+					const variantGroups = card.querySelectorAll('.group-container');
+					let allSelected = true;
+					let missingGroups = [];
+
+					variantGroups.forEach(group => {
+						// On vérifie si un bouton a la classe active-variant dans ce groupe
+						const hasSelection = group.querySelector('.variant-btn.active-variant');
+						
+						if (!hasSelection) {
+							allSelected = false;
+							const groupName = group.getAttribute('data-group') || "Option";
+							missingGroups.push(groupName);
+							
+							// Feedback visuel : on fait vibrer le titre du groupe (le <p> juste avant la div)
+							const groupTitle = group.previousElementSibling;
+							if (groupTitle) {
+								groupTitle.classList.add('text-red-500', 'animate-bounce');
+								setTimeout(() => groupTitle.classList.remove('text-red-500', 'animate-bounce'), 2000);
+							}
+						}
+					});
+
+					// Si une variante manque, on stop tout et on alerte
+					if (!allSelected) {
+						alert(`Miaou ! Merci de choisir : ${missingGroups.join(', ')} 🐾`);
+						return;
+					}
+
+					// --- 2. RÉCUPÉRATION DES DONNÉES (Si tout est sélectionné) ---
+					
+					// Récupération des variantes choisies
+					const activeVariants = Array.from(card.querySelectorAll('.variant-btn.active-variant'))
+												.map(v => v.textContent.trim());
+					
+					const variantDisplay = activeVariants.length > 0 ? activeVariants.join(' / ') : "Standard";
+
+					// Récupération des extras
+					let extrasPrice = 0;
+					const selectedExtras = [];
+					card.querySelectorAll('.extra-btn.extra-selected').forEach(extra => {
+						const price = parseFloat(extra.getAttribute('data-extra-price') || "0");
+						const name = extra.getAttribute('data-extra-name');
+						extrasPrice += price;
+						selectedExtras.push(name);
+					});
+
+					const basePrice = parseFloat(btn.getAttribute('data-price') || "0");
+					const baseTitle = btn.getAttribute('data-title');
+
+					// --- RÉCUPÉRATION DU PIMENT (SI ACTIVÉ) ---
+					const spiceInput = card.querySelector('.spice-range');
+					let spiceInfo = "";
+					if (spiceInput) {
+						const spiceLabelsShort = ["Doux", "Moyen", "Relevé", "Lave"];
+						spiceInfo = ` | Piment : ${spiceLabelsShort[spiceInput.value]}`;
+					}
+
+					// --- 3. CRÉATION DE L'OBJET ITEM ---
+					const item = {
+						title: baseTitle,
+						price: basePrice + extrasPrice,
+						// On récupère les allergènes (SANS ...)
+						allergens: Array.from(card.querySelectorAll('.allergen-btn.allergen-selected') || [])
+										.map(a => a.textContent.trim().replace('SANS ', '')), 
+						
+						// On combine variantes, extras ET l'info piment
+						variant: (selectedExtras.length > 0 
+							? `${variantDisplay} (+ ${selectedExtras.join(', ')})` 
+							: variantDisplay) + spiceInfo,
+							
+						preorder: btn.getAttribute('data-preorder') === "true"
+					};
+
+					// --- 4. ENREGISTREMENT & UI ---
+					cart.push(item);
+					updateCartUI();
+
+					// --- 5. FEEDBACK BOUTON & RESET EXTRAS ---
+					// On désélectionne les extras après l'ajout
+					card.querySelectorAll('.extra-btn').forEach(ex => ex.classList.remove('extra-selected'));
+					
+					// Animation du bouton "+" qui devient "✓"
+					const original = btn.innerHTML;
+					btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor font-bold"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M5 13l4 4L19 7" /></svg>`;
+					btn.classList.replace('bg-cat-pine', 'bg-cat-teal');
+					
+					setTimeout(() => { 
+						btn.innerHTML = original; 
+						btn.classList.replace('bg-cat-teal', 'bg-cat-pine'); 
+					}, 800);
+				});
+			});
+
+			// --- 5. ENVOI COMMANDE ---
+			const handleOrder = async (type) => {
+				if (cart.length === 0) return;
+
+				// 1. Récupération des données du formulaire
+				const form = {
+					name: elements.clientNameInput.value,
+					phone: elements.clientPhoneInput.value,
+					date: document.getElementById('pickup-date').value,
+					time: document.getElementById('pickup-time').value,
+					note: document.getElementById('client-note').value,
+					orderType: document.querySelector('.order-type-btn.active-type')?.getAttribute('data-type') || "À Emporter"
+				};
+
+				// 2. Vérification des champs obligatoires
+				if (!form.name || !form.phone || !form.date || !form.time) {
+					alert("Oups ! Merci de remplir les infos de retrait. 🐾");
+					return;
+				}
+
+				const selectedTypeBtn = document.querySelector('.order-type-btn.active-type');
+
+				if (!selectedTypeBtn) {
+					const typeTitle = document.getElementById('order-type-title');
+					if (typeTitle) {
+						typeTitle.classList.add('text-red-500', 'animate-bounce');
+						setTimeout(() => typeTitle.classList.remove('text-red-500', 'animate-bounce'), 2000);
+					}
+					alert("Miaou ! N'oubliez pas de choisir : Sur Place ou À Emporter. 🐾");
+					
+					// On scroll vers le haut pour montrer l'erreur
+					const modalContainer = document.querySelector('#cart-modal .overflow-y-auto');
+					modalContainer?.scrollTo({ top: 0, behavior: 'smooth' });
+					return;
+				}
+
+				// Si on arrive ici, c'est que le type est choisi, on l'ajoute à l'objet form
+				form.orderType = selectedTypeBtn.getAttribute('data-type');
+
+				// --- LOGIQUE DE VALIDATION TEMPORELLE ---
+				const now = new Date();
+				const currentHour = now.getHours();
+
+				// On récupère la date du formulaire sans les problèmes de fuseau horaire
+				// L'input date renvoie "YYYY-MM-DD"
+				const dateValue = document.getElementById('pickup-date').value; 
+				const todayStr = now.toISOString().split('T')[0]; // Format "YYYY-MM-DD"
+
+				// Sécurité Globale : Pas de commande dans le passé (Date + Heure)
+				const [hours, minutes] = form.time.split(':');
+				const pickupFullDate = new Date(form.date + 'T' + form.time); // Force l'heure locale
+
+				if (pickupFullDate.getTime() <= now.getTime()) {
+					alert("Miaou ! Le créneau choisi est déjà passé. 🐾");
+					return;
+				}
+
+				// Jours de fermeture (On recréé la date proprement pour le getDay)
+				const selectedDate = new Date(form.date + 'T00:00:00');
+				if (selectedDate.getDay() === 0 || selectedDate.getDay() === 1) {
+					alert("Le restaurant est fermé le dimanche et le lundi. 🐾");
+					return;
+				}
+
+				// Plage horaire globale
+				if (form.time < "11:30" || form.time > "19:00") {
+					alert("Les retraits se font uniquement entre 11h30 et 19h00. 🐾");
+					return;
+				}
+
+				// Détection des plats "Sur Réservation"
+				const hasPreorderItem = cart.some(item => item.preorder === true);
+
+				if (hasPreorderItem) {
+					const isToday = (dateValue === todayStr);
+
+					// RÈGLE 1 : Si c'est aujourd'hui et qu'on a dépassé 11h
+					if (isToday && currentHour >= 11) {
+						// --- CALCUL DU PROCHAIN JOUR DISPONIBLE ---
+						let nextAvailableDate = new Date(now);
+						nextAvailableDate.setDate(now.getDate() + 1); // On commence par viser demain
+
+						// Si demain est Dimanche (0) ou Lundi (1), on décale jusqu'à Mardi (2)
+						while (nextAvailableDate.getDay() === 0 || nextAvailableDate.getDay() === 1) {
+							nextAvailableDate.setDate(nextAvailableDate.getDate() + 1);
+						}
+
+						// Formatage de la date pour le message (ex: "mardi 28 avril")
+						const dateOptions = { weekday: 'long', day: 'numeric', month: 'long' };
+						const dateFriendly = nextAvailableDate.toLocaleDateString('fr-FR', dateOptions);
+
+						alert(`Votre panier contient des plats sur réservation. Le retrait n'est possible qu'à partir du ${dateFriendly} à 13h00. 🐾`);
+						return;
+					}
+					
+					// RÈGLE 2 : Heure min pour les réservations (Toujours 13h)
+					if (form.time < "13:00") {
+						alert("Les plats sur réservation ne sont disponibles qu'à partir de 13h00. 🐾");
+						return;
+					}
+				}
+
+				// 3. Préparation du Modal de Confirmation
+				const total = cart.reduce((sum, item) => sum + item.price, 0);
+				
+				// Remplissage dynamique du modal
+				elements.confirmDetails.innerHTML = `
+					<p>Confirmer la commande pour <span class="font-black text-cat-teal">${form.name}</span> ?</p>
+					<p class="text-lg font-black text-cat-pine">Total : ${total.toFixed(2)}€</p>
+					<p class="text-[10px] mt-4 italic">Envoyez le message pour que l'équipe Cat's Eyes valide la préparation.</p>
+				`;
+
+				// Reset de l'affichage du modal
+				elements.confirmModal.classList.remove('hidden');
+				elements.smsFallback.classList.add('hidden');
+				elements.finalWhatsappBtn.classList.remove('hidden');
+				elements.noWhatsappBtn.classList.remove('hidden');
+				elements.confirmAltBtn.classList.add('hidden');
+
+				// --- GESTION DES CLICS DANS LE MODAL ---
+
+				// A. Action Finale (Enregistrement + WhatsApp)
+				elements.finalWhatsappBtn.onclick = async () => {
+					try {
+						await supabase.from('commandes').insert([{
+							nom_client: form.name, 
+							telephone: form.phone, 
+							date_retrait: form.date,
+							heure_retrait: form.time, 
+							items: cart, 
+							total: total, 
+							note: form.note, 
+							statut: 'nouveau'
+						}]);
+					} catch (err) { console.error("Erreur Supabase:", err); }
+
+					const dateFr = form.date.split('-').reverse().join('/');
+					let msg = `*NOUVELLE COMMANDE - CAT'S EYES*\nClient: ${form.name}\nRetrait: ${dateFr} à ${form.time}\n\n--- ARTICLES ---\n`;
+					
+					cart.forEach(i => {
+						msg += `- ${i.title} [${i.variant}] : ${i.price}€\n`;
+						
+						// On ajoute les allergènes sélectionnés s'il y en a
+						if (i.allergens && i.allergens.length > 0) {
+							msg += `  ⚠️ ALLERGIES : ${i.allergens.join(', ')}\n`;
+						}
+					});
+					
+					msg += `\n*TOTAL : ${total.toFixed(2)}€*`;
+					if(form.note) msg += `\nNote: ${form.note}`;
+
+					window.open(`https://wa.me/33762351391?text=${encodeURIComponent(msg)}`, '_blank');
+
+					finalizeOrder();
+					alert("Commande transmise ! Pensez à envoyer le message WhatsApp qui vient de s'ouvrir. 🐾");
+				};
+
+				// B. Option "Je n'ai pas WhatsApp"
+				elements.noWhatsappBtn.onclick = () => {
+					elements.smsFallback.classList.remove('hidden');
+					// AJOUTE CETTE LIGNE CI-DESSOUS :
+					elements.confirmAltBtn.classList.remove('hidden'); 
+					
+					elements.noWhatsappBtn.classList.add('hidden');
+					elements.finalWhatsappBtn.classList.add('hidden');
+				};
+
+				// C. Action Alternative (Enregistrement seul)
+				elements.confirmAltBtn.onclick = async () => {
+					try {
+						await supabase.from('commandes').insert([{
+							nom_client: form.name, telephone: form.phone, date_retrait: form.date,
+							heure_retrait: form.time, items: cart, total: total, note: form.note, statut: 'nouveau'
+						}]);
+					} catch (err) { console.error("Erreur Supabase:", err); }
+
+					finalizeOrder();
+					alert("Commande enregistrée ! L'équipe Cat's Eyes attend votre appel ou SMS pour valider. 🐾");
+				};
+
+				// D. Annuler
+				elements.cancelBtn.onclick = () => elements.confirmModal.classList.add('hidden');
+
+				// Fonction interne pour nettoyer après commande
+				function finalizeOrder() {
+					cart = [];
+					updateCartUI();
+					elements.confirmModal.classList.add('hidden');
+					closeAllModals();
+				}
+			};
+
+			// --- 6. FIDÉLITÉ ---
+			elements.checkLoyaltyBtn?.addEventListener('click', async () => {
+				const phone = elements.lookupPhoneInput?.value.trim().replace(/\s+/g, '');
+				
+				if (!phone) {
+					alert("Miaou ! Il manque le numéro pour trouver vos points. 🐾");
+					return;
+				}
+
+				// 2. Accès rapide Admin
+				if (phone === "0631541175" || phone === targetPhone) {
+					window.location.href = '/admin/login';
+					return;
+				}
+
+				elements.checkLoyaltyBtn.textContent = "Recherche...";
+				
+				try {
+					// 3. Appel Supabase
+					const { data, error } = await supabase
+						.from('profils')
+						.select('*')
+						.eq('telephone', phone)
+						.single();
+
+					if (error || !data) {
+						alert("Numéro non trouvé. Passez nous voir au restaurant pour commencer à cumuler ! 🐾");
+					} else {
+						// 4. Calcul de la progression (Palier de 10 points)
+						const points = data.points_fidelite || 0;
+						const goal = 10;
+						const progress = Math.min((points / goal) * 100, 100);
+						const remaining = Math.max(goal - points, 0);
+
+						// 5. Mise à jour de l'UI
+						const userPointsEl = document.getElementById('user-points');
+						const pointsBarEl = document.getElementById('points-bar');
+						const pointsNeededEl = document.getElementById('points-needed');
+
+						if (userPointsEl) userPointsEl.textContent = points.toString();
+						if (pointsBarEl) pointsBarEl.style.width = `${progress}%`;
+						if (pointsNeededEl) pointsNeededEl.textContent = remaining.toString();
+
+						// 6. Switch d'affichage (cache le formulaire, montre les stats)
+						document.getElementById('profile-login')?.classList.add('hidden');
+						document.getElementById('profile-stats')?.classList.remove('hidden');
+					}
+				} catch (err) {
+					console.error("Erreur Fidélité:", err);
+					alert("Oups, une petite erreur de connexion... 🐾");
+				} finally {
+					elements.checkLoyaltyBtn.textContent = "Voir mes points";
+				}
+
+				const changePhoneBtn = document.getElementById('change-phone-btn');
+				changePhoneBtn?.addEventListener('click', () => {
+					// 1. On vide le champ de saisie pour repartir à neuf
+					if (elements.lookupPhoneInput) elements.lookupPhoneInput.value = '';
+					
+					// 2. On bascule l'affichage
+					document.getElementById('profile-stats')?.classList.add('hidden');
+					document.getElementById('profile-login')?.classList.remove('hidden');
+					
+					// 3. Optionnel : On remet le bouton de recherche à son texte initial
+					if (elements.checkLoyaltyBtn) elements.checkLoyaltyBtn.textContent = "Voir mes points";
+				});
+			});
+
+			// --- GESTION DU "VOIR PLUS" DYNAMIQUE ---
+			const initDescriptions = () => {
+				const containers = document.querySelectorAll('.description-container');
+				containers.forEach(container => {
+					const textEl = container.querySelector('.product-description');
+					const btn = container.querySelector('.toggle-description');
+
+					if (textEl && btn) {
+						// On vérifie si le texte dépasse réellement la hauteur de 3 lignes
+						const isOverflowing = textEl.scrollHeight > textEl.clientHeight;
+
+						if (isOverflowing) {
+							btn.classList.remove('hidden'); // On affiche le bouton
+						} else {
+							btn.remove(); // On supprime le bouton s'il n'y a pas de débordement
+						}
+					}
+				});
+			};
+
+			// --- 7. MODAL ACTIONS ---
+			const closeAllModals = () => {
+				elements.cartModal?.classList.add('hidden');
+				elements.profileModal?.classList.add('hidden');
+				document.body.style.overflow = '';
+			};
+
+			elements.openCart?.addEventListener('click', () => {
+				updateCartUI(false);
+				elements.cartModal?.classList.remove('hidden');
+				document.body.style.overflow = 'hidden';
+			});
+
+			elements.openProfile?.addEventListener('click', () => {
+				elements.profileModal?.classList.remove('hidden');
+				document.body.style.overflow = 'hidden';
+			});
+
+			[elements.closeCartBtn, elements.cartOverlay, elements.closeProfileBtn, elements.profileOverlay].forEach(btn => {
+				btn?.addEventListener('click', closeAllModals);
+			});
+
+			// --- CONNEXION DU BOUTON RÉSERVER ---
+			elements.whatsappBtn?.addEventListener('click', () => {
+				handleOrder('wa');
+			});
+
+			// Si tu as gardé un bouton SMS quelque part, sinon la ligne du dessus suffit
+			elements.smsBtn?.addEventListener('click', () => {
+				handleOrder('sms');
+			});
+
+			// --- 8. SYNCHRONISATION LIVE (PLATS + INGRÉDIENTS) ---
+			const stockChannel = supabase
+				.channel('live-inventory-' + Math.random()) // Canal unique pour éviter les conflits
+				.on('postgres_changes', { 
+					event: 'UPDATE', 
+					schema: 'public', 
+					table: 'stocks' 
+				}, (payload) => {
+					const { product_slug, en_stock } = payload.new;
+					console.log("⚡️ Mise à jour stock :", product_slug, en_stock);
+
+					// CASE A : C'EST UN INGRÉDIENT GLOBAL
+					if (product_slug.startsWith('global:')) {
+						const ingredientName = product_slug.split(':')[1].replace(/-/g, ' ').toLowerCase();
+						console.log("🛠 Ingrédient reçu :", ingredientName);
+
+						const allBtns = document.querySelectorAll('.variant-btn, .extra-btn');
+						allBtns.forEach(btn => {
+							const btnText = btn.textContent.trim().toLowerCase();
+							
+							if (btnText.includes(ingredientName)) {
+								console.log("🎯 Match trouvé sur :", btnText);
+								if (en_stock === false) {
+									btn.classList.add('opacity-30', 'pointer-events-none', 'line-through');
+									btn.classList.remove('active-variant', 'bg-cat-yellow');
+								} else {
+									btn.classList.remove('opacity-30', 'pointer-events-none', 'line-through');
+								}
+							}
+						});
+					}
+
+					// CASE B : PLAT COMPLET (Correction des visuels)
+					const productCard = document.querySelector(`[data-product-id="${product_slug}"]`);
+					if (productCard) {
+						const isEpuise = en_stock === false;
+						const badge = productCard.querySelector('.victime-badge');
+						const productImage = productCard.querySelector('.product-img');
+						const btnAdd = productCard.querySelector('.add-to-cart-btn');
+						const textIndispo = productCard.querySelector('.status-indisponible');
+						const preorderBadge = productCard.querySelector('.preorder-badge');
+
+						if (isEpuise) {
+							productCard.classList.add('opacity-50', 'pointer-events-none');
+							productImage?.classList.add('grayscale');
+							badge?.classList.remove('hidden');
+							btnAdd?.classList.add('hidden');
+							textIndispo?.classList.remove('hidden');
+							preorderBadge?.classList.add('hidden');
+						} else {
+							productCard.classList.remove('opacity-50', 'pointer-events-none');
+							productImage?.classList.remove('grayscale');
+							badge?.classList.add('hidden');
+							btnAdd?.classList.remove('hidden');
+							textIndispo?.classList.add('hidden');
+							// Le preorder badge réapparaît si la carte est de type preorder (logique simplifiée)
+							if (productCard.classList.contains('border-cat-teal/40')) preorderBadge?.classList.remove('hidden');
+						}
+					}
+				})
+				.subscribe();
+
+			// --- INITIALISATION ---
+			if (!getCatCookie('catseyes_consent') && elements.banner) {
+				setTimeout(() => { elements.banner?.classList.replace('hidden', 'block'); }, 600);
+			}
+
+			restoreUserSession();
+			setTimeout(initDescriptions, 100);
+		});
+	</script>
+
+	<footer class="bg-cat-pine text-cat-wood py-16 px-6 border-t border-cat-wood/10">
+		<div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-12 text-center md:text-left">
+			
+			<div class="flex flex-col items-center md:items-start gap-6">
+				<div>
+					<h4 class="font-black text-xl tracking-tighter">CAT'S EYES</h4>
+					<p class="text-[10px] uppercase tracking-[0.2em] opacity-60">Jus • Soupes • Traiteur</p>
+				</div>
+				
+				<div class="flex gap-4">
+					<a href="https://instagram.com" target="_blank" class="w-10 h-10 bg-cat-yellow text-cat-pine rounded-full flex items-center justify-center hover:scale-110 transition-all shadow-lg" aria-label="Instagram">
+						<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
+					</a>
+					<a href="#" target="_blank" class="w-10 h-10 bg-cat-yellow text-cat-pine rounded-full flex items-center justify-center hover:scale-110 transition-all shadow-lg" aria-label="Facebook">
+						<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg>
+					</a>
+				</div>
+			</div>
+
+			<div class="space-y-4">
+				<h5 class="font-bold uppercase text-xs tracking-widest text-cat-yellow">Nous trouver</h5>
+				<p class="text-sm opacity-80 italic">
+					6 Rue Isabelle Romée <br/>
+					45000 Orléans 
+				</p>
+				<p class="text-sm opacity-80">
+					Mardi - Samedi : 11h30 - 18h00<br/>
+					Dimanche - Lundi : Fermé
+				</p>
+			</div>
+
+			<div class="space-y-4">
+				<h5 class="font-bold uppercase text-xs tracking-widest text-cat-yellow">Informations</h5>
+				<nav class="flex flex-col gap-2 text-sm opacity-70">
+					<a href="/mentions-legales" class="hover:text-cat-yellow transition-colors">Mentions Légales</a>
+					<a href="/politique-de-confidentialite" class="hover:text-cat-yellow transition-colors">Politique de Confidentialité</a>
+					<a href="/cgv" class="hover:text-cat-yellow transition-colors">CGV / CGU</a>
+					<a href="/cookies" class="hover:text-cat-yellow transition-colors">Gestion des Cookies</a>
+				</nav>
+			</div>
+		</div>
+
+		<div class="max-w-7xl mx-auto mt-16 pt-8 border-t border-cat-wood/5 flex flex-col md:flex-row justify-between items-center gap-4 text-[10px] uppercase tracking-widest opacity-40">
+			<p>© 2026 CAT'S EYES - TOUS DROITS RÉSERVÉS [cite: 1]</p>
+			<p>CONCEPTION : EVRAN CAMUS SOLUTIONS DIGITALES [cite: 2]</p>
+		</div>
+	</footer>
+
+	<div id="legal-modal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4 bg-cat-pine/90 backdrop-blur-sm">
+		<div class="bg-cat-wood w-full max-w-2xl max-h-[80vh] rounded-[2.5rem] overflow-hidden flex flex-col shadow-2xl">
+			<div class="p-8 border-b border-cat-pine/10 flex justify-between items-center bg-cat-yellow">
+				<h3 id="modal-title" class="font-black text-cat-pine uppercase tracking-widest text-xl">Titre</h3>
+				<button id="close-modal" class="p-2 hover:bg-cat-pine/10 rounded-full transition-colors">
+					<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-cat-pine" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+					</svg>
+				</button>
+			</div>
+			<div id="modal-content" class="p-8 overflow-y-auto text-cat-pine text-sm leading-relaxed prose prose-slate">
+				</div>
+		</div>
+	</div>
+
+	<div id="modal-legal" class="fixed inset-0 z-[300] hidden flex items-center justify-center p-4">
+		<div id="close-legal-overlay" class="absolute inset-0 bg-cat-pine/60 backdrop-blur-sm"></div>
+		
+		<div class="relative bg-white rounded-[2.5rem] p-8 max-w-md w-full shadow-2xl border-2 border-cat-teal animate-text-entrance">
+			<button id="close-legal-btn" class="absolute top-6 right-6 text-cat-pine/40 hover:text-cat-pine transition-colors">✕</button>
+			
+			<h3 class="text-2xl font-black text-cat-pine italic mb-6">Cuisine & Cookies 🐾</h3>
+			
+			<div class="space-y-4 text-sm text-cat-pine/80 leading-relaxed overflow-y-auto max-h-[60vh] pr-2">
+				<section>
+					<p class="font-bold text-cat-teal uppercase text-[10px] tracking-widest mb-1">Pourquoi des cookies ?</p>
+					<p>On utilise des petits fichiers (cookies) uniquement pour que votre panier ne s'envole pas si vous changez de page. C'est purement technique !</p>
+				</section>
+
+				<section>
+					<p class="font-bold text-cat-teal uppercase text-[10px] tracking-widest mb-1">Ce que nous gardons :</p>
+					<ul class="list-disc ml-4 space-y-1">
+						<li>Le contenu de votre panier (ce-cart-items).</li>
+						<li>Votre choix concernant ce bandeau (catseyes_consent).</li>
+					</ul>
+				</section>
+
+				<section>
+					<p class="font-bold text-cat-teal uppercase text-[10px] tracking-widest mb-1">Ce que nous NE gardons PAS :</p>
+					<p>Votre nom et votre numéro de téléphone ne sont jamais stockés dans des cookies. Ils ne servent qu'à l'envoi de votre message WhatsApp.</p>
+				</section>
+
+				<section class="p-4 bg-cat-yellow/10 rounded-2xl border border-cat-yellow/20">
+					<p class="text-[11px] italic">En résumé : on cuisine des PHO, pas vos données personnelles. Bon appétit ! 🍜</p>
+				</section>
+			</div>
+		</div>
+	</div>
+
+	<script>
+		const legalContent = {
+			mentions: {
+				title: "Mentions Légales",
+				content: `
+					<p><strong>Éditeur du site :</strong><br>Restaurant CAT'S EYES<br>6 Rue Isabelle Romée, 45000 Orléans<br>SIRET : 90143781400014</p>
+					<p><strong>Conception et Développement :</strong><br>Evran CAMUS Solutions Digitales<br>SIRET : 883 158 305 00036</p>
+					<p><strong>Hébergement :</strong><br>Netlify / Vercel</p>
+				`
+			},
+			confidentialite: {
+				title: "Politique de Confidentialité",
+				content: `
+					<p><strong>Données collectées :</strong> Nous collectons votre numéro de téléphone uniquement lors de la consultation de vos points ou de l'envoi d'une commande.</p>
+					<p><strong>Zéro stockage :</strong> Pour votre sécurité, votre nom et votre numéro ne sont pas stockés dans des cookies.</p>
+					<p><strong>Vos droits :</strong> Vous pouvez demander la suppression de vos données sur simple demande en restaurant.</p>
+				`
+			},
+			cgv: {
+				title: "CGV / CGU",
+				content: `
+					<p>Les présentes conditions régissent l'utilisation du site et des services de commande en ligne Cat's Eyes.</p>
+					<p><strong>Retrait :</strong> Toute commande passée doit être récupérée au créneau choisi.</p>
+				`
+			},
+			// --- NOUVELLE SECTION POUR LES COOKIES ---
+			cookies: {
+				title: "Cuisine & Cookies 🐾",
+				content: `
+					<p class="font-bold text-cat-teal italic mb-2">Ici, on cuisine des PHO, pas vos données.</p>
+					<p><strong>Usage technique :</strong> Nous utilisons des cookies uniquement pour mémoriser votre panier le temps de votre navigation.</p>
+					<p><strong>Consentement :</strong> Si vous refusez, le site fonctionnera mais votre panier se videra si vous actualisez la page.</p>
+					<p><strong>Données personnelles :</strong> Aucun nom ni numéro de téléphone n'est enregistré de façon permanente dans nos cookies.</p>
+				`
+			}
+		};
+
+		const modal = document.getElementById('legal-modal');
+		const modalTitle = document.getElementById('modal-title');
+		const modalContent = document.getElementById('modal-content');
+		const closeModal = document.getElementById('close-modal');
+
+		const openLegal = (type) => {
+			const data = legalContent[type];
+			if (!data) return;
+
+			modalTitle.innerText = data.title;
+			modalContent.innerHTML = data.content;
+			
+			modal.classList.replace('hidden', 'flex');
+			document.body.style.overflow = 'hidden';
+		};
+
+		const closeLegal = () => {
+			modal.classList.replace('flex', 'hidden');
+			document.body.style.overflow = '';
+		};
+
+		closeModal?.addEventListener('click', closeLegal);
+		modal?.addEventListener('click', (e) => { if(e.target === modal) closeLegal(); });
+
+		// --- LIENS FOOTER ---
+		document.querySelector('[href="/mentions-legales"]')?.addEventListener('click', (e) => { e.preventDefault(); openLegal('mentions'); });
+		document.querySelector('[href="/politique-de-confidentialite"]')?.addEventListener('click', (e) => { e.preventDefault(); openLegal('confidentialite'); });
+		document.querySelector('[href="/cgv"]')?.addEventListener('click', (e) => { e.preventDefault(); openLegal('cgv'); });
+		document.querySelector('[href="/cookies"]')?.addEventListener('click', (e) => { e.preventDefault(); openLegal('cookies'); });
+		
+		// --- LIEN BANNIÈRE COOKIE ---
+		// On cible le bouton "En savoir plus" (ID : more-cookies)
+		document.getElementById('more-cookies')?.addEventListener('click', (e) => { 
+			e.preventDefault(); 
+			openLegal('cookies'); 
+		});
+	</script>
+
+	<div id="cart-modal" class="fixed inset-0 z-[100] hidden">
+		<div class="absolute inset-0 bg-cat-pine/60 backdrop-blur-sm" id="close-cart-overlay"></div>
+		
+		<div class="absolute right-0 top-0 h-full w-full max-w-md bg-white shadow-2xl p-8 flex flex-col">
+			<div class="flex justify-between items-center mb-8">
+				<h3 class="text-3xl font-bold text-cat-pine italic">Ma Commande</h3>
+				<button id="close-cart-btn" class="text-cat-pine text-2xl hover:rotate-90 transition-transform">✕</button>
+			</div>
+
+			<div id="cart-items-list" class="flex-grow overflow-y-auto space-y-4 pr-2">
+				<p class="text-center text-cat-pine/50 italic py-10">Votre panier est vide...</p>
+			</div>
+
+			<div class="border-t-2 border-dotted border-cat-pine/20 pt-6 mt-6">
+				<div class="flex justify-between items-center mb-6">
+					<span class="font-bold uppercase tracking-widest text-sm text-cat-pine/60">Total estimé</span>
+					<span id="cart-total-price" class="text-3xl font-black text-cat-teal">0.00€</span>
+				</div>
+
+				<div class="mb-6">
+					<p id="order-type-title" class="text-[10px] font-black uppercase text-cat-pine mb-3 tracking-widest text-center transition-all">
+						Type de commande
+					</p>
+					<div class="grid grid-cols-2 gap-3" id="order-type-container">
+						<button type="button" data-type="A Emporter" class="order-type-btn px-4 py-3 rounded-2xl border-2 border-cat-pine font-black text-xs uppercase transition-all bg-white text-cat-pine/30 opacity-60">
+							🥡 À Emporter
+						</button>
+						<button type="button" data-type="Sur Place" class="order-type-btn px-4 py-3 rounded-2xl border-2 border-cat-pine font-black text-xs uppercase transition-all bg-white text-cat-pine/30 opacity-60">
+							🍽️ Sur Place
+						</button>
+					</div>
+				</div>
+
+				<div class="space-y-4 mb-6 border-t border-cat-pine/10 pt-6 text-left">
+					<p class="text-[10px] font-black uppercase tracking-widest text-cat-teal">Vos informations de retrait</p>
+					
+					<input type="text" id="client-name" placeholder="Votre Nom et Prénom *" class="w-full bg-cat-yellow/5 border-2 border-cat-pine/10 rounded-xl px-4 py-3 text-sm focus:border-cat-teal outline-none transition-all" required />
+					
+					<input type="tel" id="client-phone" placeholder="Numéro de téléphone *" class="w-full bg-cat-yellow/5 border-2 border-cat-pine/10 rounded-xl px-4 py-3 text-sm focus:border-cat-teal outline-none transition-all" required />
+
+					<div class="flex gap-2">
+						<input type="date" id="pickup-date" class="w-1/2 bg-cat-yellow/5 border-2 border-cat-pine/10 rounded-xl px-4 py-3 text-sm focus:border-cat-teal outline-none transition-all" required />
+						<input type="time" id="pickup-time" class="w-1/2 bg-cat-yellow/5 border-2 border-cat-pine/10 rounded-xl px-4 py-3 text-sm focus:border-cat-teal outline-none transition-all" required />
+					</div>
+
+					<textarea id="client-note" placeholder="Une précision ? (ex: sans coriandre, allergie...)" class="w-full bg-cat-yellow/5 border-2 border-cat-pine/10 rounded-xl px-4 py-3 text-sm focus:border-cat-teal outline-none transition-all h-20 resize-none"></textarea>
+				</div>
+				<div class="flex flex-col gap-3">
+					<button id="send-order-whatsapp" class="w-full bg-cat-yellow text-cat-pine py-5 rounded-full font-black uppercase tracking-widest shadow-xl hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2">
+						<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.588-5.946 0-6.556 5.332-11.888 11.888-11.888 3.176 0 6.161 1.237 8.404 3.48s3.48 5.228 3.48 8.404c0 6.556-5.332 11.888-11.888 11.888-2.016 0-3.991-.513-5.741-1.488l-6.242 1.613zm6.216-3.834l.334.197c1.463.867 3.155 1.325 4.887 1.325 5.177 0 9.391-4.213 9.391-9.391 0-2.505-.975-4.86-2.746-6.632s-4.127-2.747-6.632-2.747c-5.178 0-9.392 4.214-9.392 9.392 0 1.956.611 3.864 1.767 5.467l.217.301-1.002 3.659 3.754-.971zm9.474-6.321c-.247-.124-1.463-.722-1.69-.803-.226-.081-.391-.124-.555.124-.165.247-.638.803-.783.97-.145.165-.289.186-.536.062-.247-.124-1.041-.383-1.983-1.223-.733-.654-1.228-1.462-1.372-1.708-.145-.247-.015-.38.109-.504.111-.113.247-.289.37-.433.124-.145.165-.247.247-.412.082-.165.042-.31-.021-.433-.063-.124-.555-1.339-.761-1.836-.2-.486-.403-.42-.555-.427h-.474c-.165 0-.433.062-.659.31-.227.247-.866.845-.866 2.061 0 1.216.886 2.392.989 2.536.103.144 1.745 2.664 4.226 3.733.59.255 1.05.407 1.409.522.593.188 1.133.161 1.559.097.476-.072 1.463-.598 1.669-1.175.207-.577.207-1.072.145-1.175-.062-.104-.227-.166-.474-.29z"/></svg>
+						Réserver ma commande
+					</button>
+				</div>
+			</div>
+		</div>
+	</div>
+	
+	<div id="confirm-order-modal" class="fixed inset-0 z-[200] hidden flex items-center justify-center p-4">
+		<div class="absolute inset-0 bg-cat-pine/80 backdrop-blur-md"></div>
+		
+		<div class="relative bg-white rounded-[2.5rem] p-8 max-w-sm w-full shadow-2xl border-2 border-cat-yellow text-center animate-text-entrance">
+			<h3 class="text-2xl font-black text-cat-pine italic mb-4">On y est ! 🐾</h3>
+			
+			<div id="confirm-details" class="text-sm text-cat-pine/70 mb-6 space-y-2">
+				</div>
+
+			<div class="flex flex-col gap-3">
+				<button id="final-whatsapp-btn" class="w-full bg-cat-yellow text-cat-pine py-4 rounded-full font-black uppercase tracking-widest hover:scale-105 transition-all shadow-lg">
+					Envoyer sur WhatsApp
+				</button>
+				
+				<button id="no-whatsapp-btn" class="w-full border-2 border-cat-pine/10 text-cat-pine/60 py-4 rounded-full font-bold text-xs uppercase hover:bg-cat-pine/5 transition-all">
+					Je n'ai pas WhatsApp
+				</button>
+				
+				<button id="cancel-confirm-btn" class="text-xs text-red-400 font-bold uppercase mt-2 hover:underline">
+					Modifier ma commande
+				</button>
+			</div>
+
+			<div id="sms-fallback-msg" class="hidden mt-6 p-5 bg-cat-teal/10 rounded-[2rem] border border-cat-teal/20 animate-text-entrance">
+				<p class="text-[11px] text-cat-teal font-bold leading-relaxed mb-4">
+					Pas de soucis ! Appelez ou envoyez un SMS directement au <span class="text-cat-pine underline font-black">07 62 35 13 91</span> pour confirmer votre commande. 🐾
+				</p>
+				
+				<button id="confirm-alt-btn" class="w-full bg-cat-teal text-white py-3 rounded-full font-black uppercase tracking-widest text-[10px] hover:scale-105 transition-all shadow-md">
+					J'ai envoyé mon message
+				</button>
+			</div>
+		</div>
+	</div>
+
+	<div id="profile-modal" class="fixed inset-0 z-[110] hidden">
+		<div class="absolute inset-0 bg-cat-pine/60 backdrop-blur-sm" id="close-profile-overlay"></div>
+		<div class="absolute right-0 top-0 h-full w-full max-w-md bg-white shadow-2xl p-8 flex flex-col">
+			<div class="flex justify-between items-center mb-10">
+				<h3 class="text-3xl font-bold text-cat-pine italic">Mon espace Pho-rever</h3>
+				<button id="close-profile-btn" class="text-2xl hover:rotate-90 transition-transform">✕</button>
+			</div>
+
+			<div id="profile-login" class="space-y-6">
+				<p class="text-cat-pine/70 italic text-sm">Entrez votre numéro pour consulter vos points de fidélité et vos cadeaux.</p>
+				<input type="tel" id="lookup-phone" placeholder="06 12 34 56 78" class="w-full border-2 border-cat-pine/10 rounded-xl p-4 outline-none focus:border-cat-teal transition-all" />
+				<button id="check-loyalty" class="w-full bg-cat-teal text-white py-4 rounded-full font-bold shadow-lg">Voir mes points</button>
+			</div>
+
+			<div id="profile-stats" class="hidden space-y-8">
+				<div class="bg-cat-yellow/20 p-6 rounded-3xl text-center border-2 border-cat-yellow">
+					<p class="text-cat-pine font-bold uppercase text-xs tracking-widest mb-2">Ma Cagnotte</p>
+					<div class="text-5xl font-black text-cat-pine"><span id="user-points">0</span> <span class="text-xl">pts</span></div>
+				</div>
+				
+				<div class="space-y-4">
+					<p class="text-sm font-bold italic text-cat-pine">Ma progression :</p>
+					<div class="w-full bg-cat-pine/10 h-4 rounded-full overflow-hidden">
+						<div id="points-bar" class="bg-cat-teal h-full transition-all duration-1000" style="width: 0%"></div>
+					</div>
+					<p class="text-[10px] text-center uppercase font-bold text-cat-pine/50">Plus que <span id="points-needed">10</span> points avant votre cadeau !</p>
+				</div>
+
+				<button id="change-phone-btn" class="mt-8 text-xs font-bold text-cat-teal uppercase tracking-widest hover:underline cursor-pointer">
+					← Consulter un autre compte
+				</button>
+			</div>
+		</div>
+	</div>
+
+	<div id="cookie-banner" class="fixed bottom-0 left-0 w-full z-[100] hidden animate-text-entrance">
+		<div class="bg-cat-pine text-cat-wood p-4 md:p-6 rounded-t-[2rem] shadow-[0_-10px_25px_-5px_rgba(0,0,0,0.3)] border-t border-cat-yellow/20 backdrop-blur-md">
+			<div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+				
+				<div class="flex items-center gap-4">
+					<div class="bg-cat-yellow p-2 rounded-xl text-cat-pine shrink-0 hidden sm:block">
+						<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 10 10 4 4 0 0 1-5-5 4 4 0 0 1-5-5"></path><path d="M8.5 8.5v.01"></path><path d="M16 15.5v.01"></path><path d="M12 12v.01"></path><path d="M11 17v.01"></path><path d="M7 14v.01"></path></svg>
+					</div>
+					<div class="text-center md:text-left">
+						<h4 class="font-black text-sm uppercase tracking-widest text-cat-yellow inline-block mr-2">Pause Cookie ?</h4>
+						<p class="text-xs leading-relaxed opacity-80 italic inline md:block">
+							On utilise uniquement des cookies techniques pour que votre panier et vos points de fidélité restent à jour lorsque vous actualisez le site ! Pas de pub, promis ! 🐾
+						</p>
+					</div>
+				</div>
+
+				<div class="flex gap-3 shrink-0">
+					<button id="accept-cookies" class="bg-cat-yellow text-cat-pine px-6 py-2 rounded-full font-bold text-[10px] uppercase hover:scale-105 transition-all shadow-md">D'accord</button>
+					<button id="decline-cookies" class="text-cat-wood/60 hover:text-cat-wood px-4 py-2 font-bold text-[10px] uppercase transition-all underline underline-offset-4">Continuer sans accepter</button>
+					<button id="more-cookies" class="border border-cat-wood/30 px-6 py-2 rounded-full font-bold text-[10px] uppercase hover:bg-cat-wood/10 transition-all">En savoir plus</button>
+				</div>
+				
+			</div>
+		</div>
+	</div>
+
+</Layout>

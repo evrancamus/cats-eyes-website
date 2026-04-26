@@ -1,0 +1,121 @@
+---
+import Layout from '../../layouts/Layout.astro';
+---
+
+<Layout title="Dashboard - Cat's Eyes">
+    <style is:inline>
+        html {
+            background-color: #1a2c2c !important; 
+            visibility: hidden;
+        }
+    </style>
+
+    <script>
+        import { supabase } from '../../lib/supabase';
+
+        const checkAuth = async () => {
+            const { data: { session } } = await supabase.auth.getSession();
+            
+            if (!session) {
+                window.location.replace('/admin/login');
+            } else {
+                document.documentElement.style.visibility = 'visible';
+                document.getElementById('admin-content')?.classList.remove('opacity-0');
+            }
+        };
+
+        checkAuth();
+
+        window.logout = async () => {
+            await supabase.auth.signOut();
+            window.location.href = '/';
+        };
+    </script>
+
+    <main id="admin-content" class="opacity-0 transition-opacity duration-500 min-h-screen bg-cat-wood p-6 md:p-12 flex flex-col items-center">
+        
+        <div class="max-w-5xl w-full flex justify-between items-center mb-16">
+            <div>
+                <h1 class="text-4xl md:text-5xl font-black text-cat-pine italic">Dashboard Admin 🐾</h1>
+                <p class="text-cat-pine/40 font-bold uppercase text-[10px] tracking-[0.2em] mt-2 ml-1">Gestion Cat's Eyes Orléans</p>
+            </div>
+            <button onclick="window.logout()" class="group flex items-center gap-2 bg-white border-2 border-red-100 px-5 py-2 rounded-full text-red-500 font-bold text-xs hover:bg-red-500 hover:text-white transition-all shadow-sm">
+                <span>Déconnexion</span>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+            </button>
+        </div>
+
+        <div class="max-w-5xl w-full grid grid-cols-1 md:grid-cols-2 gap-8">
+            
+            <a href="/admin/commandes" class="group relative bg-cat-pine p-10 rounded-[3rem] shadow-2xl hover:-translate-y-2 transition-all flex flex-col justify-between overflow-hidden">
+                <div class="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 transition-transform">
+                    <span class="text-9xl">🥢</span>
+                </div>
+                
+                <div class="relative z-10">
+                    <div class="flex justify-between items-start mb-8">
+                        <div class="p-4 bg-white/10 rounded-2xl backdrop-blur-md">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-cat-yellow" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                            </svg>
+                        </div>
+                        <span class="bg-cat-teal text-[10px] font-black px-4 py-1.5 rounded-full text-white animate-pulse shadow-lg tracking-widest">LIVE</span>
+                    </div>
+                    <h2 class="text-4xl font-black text-white mb-4 italic">Commandes</h2>
+                    <p class="text-white/60 text-sm leading-relaxed italic max-w-xs">Gérez les réservations entrantes et créditez les points Pho-rever aux clients.</p>
+                </div>
+
+                <div class="relative z-10 mt-12 flex items-center gap-2 text-cat-yellow font-bold text-sm tracking-widest uppercase">
+                    Accéder au flux <span class="group-hover:translate-x-2 transition-transform">→</span>
+                </div>
+            </a>
+
+            <a href="/cms/index.html" class="group relative bg-white border-4 border-cat-pine p-10 rounded-[3rem] shadow-2xl hover:-translate-y-2 transition-all flex flex-col justify-between overflow-hidden">
+                 <div class="absolute top-0 right-0 p-8 opacity-5 group-hover:scale-110 transition-transform">
+                    <span class="text-9xl">📖</span>
+                </div>
+
+                <div class="relative z-10">
+                    <div class="flex justify-between items-start mb-8">
+                        <div class="p-4 bg-cat-pine/5 rounded-2xl">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-cat-pine" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                            </svg>
+                        </div>
+                    </div>
+                    <h2 class="text-4xl font-black text-cat-pine mb-4 italic">La Carte</h2>
+                    <p class="text-cat-pine/60 text-sm leading-relaxed italic max-w-xs">Mettez à jour vos plats, changez les prix ou gérez les ruptures de stock instantanément.</p>
+                </div>
+
+                <div class="relative z-10 mt-12 flex items-center gap-2 text-cat-teal font-bold text-sm tracking-widest uppercase">
+                    Modifier le menu <span class="group-hover:translate-x-2 transition-transform">→</span>
+                </div>
+            </a>
+
+            <a href="/admin/stock" class="group relative bg-white border-4 border-cat-pine p-10 rounded-[3rem] shadow-2xl hover:-translate-y-2 transition-all flex flex-col justify-between overflow-hidden">
+                <div class="flex justify-between items-start">
+                    <div class="p-4 bg-cat-teal/10 rounded-2xl text-cat-teal group-hover:scale-110 transition-transform">
+                        <span class="text-3xl">⚡️</span>
+                    </div>
+                    <span class="bg-cat-teal text-white text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest">Temps Réel</span>
+                </div>
+                
+                <div class="mt-8">
+                    <h2 class="text-3xl font-black text-cat-pine italic leading-none">Stocks <span class="text-cat-teal italic">Live</span></h2>
+                    <p class="text-sm text-cat-pine/60 mt-2 font-medium">Gérer les ruptures de stock instantanément.</p>
+                </div>
+            </a>
+        </div>
+
+    </main>
+</Layout>
+
+<style>
+    /* Optionnel : pour que le fond de la page admin soit un peu plus texturé/élégant */
+    #admin-content {
+        background-image: radial-gradient(circle at 2px 2px, rgba(26, 44, 44, 0.05) 1px, transparent 0);
+        background-size: 40px 40px;
+    }
+</script>
