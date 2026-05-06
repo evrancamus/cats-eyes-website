@@ -15,16 +15,19 @@ const isVacation = settingsRes.data?.value || false;
 
 // 3. GESTION DES STOCKS (Plats et Ingrédients)
 const stocksData = stocksRes.data || [];
+const GLOBAL_STOCK_PREFIX = 'global:';
 
 // Tableau des IDs de plats épuisés (ex: ["banh-cuon"])
 const slugsEpuises = stocksData
-    .filter(s => s.en_stock === false && !s.product_slug.startsWith('global:'))
+    .filter(s => s.en_stock === false && !s.product_slug.startsWith(GLOBAL_STOCK_PREFIX))
     .map(s => s.product_slug);
+const slugsEpuisesSet = new Set(slugsEpuises);
 
 // Tableau des ingrédients globaux épuisés (nettoyés pour la comparaison)
 const ingredientsEpuises = stocksData
-    .filter(s => s.en_stock === false && s.product_slug.startsWith('global:'))
+    .filter(s => s.en_stock === false && s.product_slug.startsWith(GLOBAL_STOCK_PREFIX))
     .map(s => s.product_slug.split(':')[1].replace(/-/g, ' ').toLowerCase());
+const ingredientsEpuisesSet = new Set(ingredientsEpuises);
 
 // 4. TRI DES PRODUITS (Best Sellers en premier)
 const allProducts = allProductsRaw.sort((a, b) => {
@@ -39,10 +42,11 @@ const allProducts = allProductsRaw.sort((a, b) => {
 // 5. GÉNÉRATION DYNAMIQUE DES CATÉGORIES
 // On récupère toutes les catégories présentes dans les fichiers markdown/json
 const dynamicCategories = [...new Set(allProducts.map(p => p.data.category))];
+const dynamicCategoriesSet = new Set(dynamicCategories);
 
 // On définit l'ordre souhaité (optionnel) et on filtre pour ne garder que ce qui existe
 const order = ["Soupes", "Plats", "Desserts", "Hors d'œuvres"];
-const availableCategories = order.filter(cat => dynamicCategories.includes(cat));
+const availableCategories = order.filter(cat => dynamicCategoriesSet.has(cat));
 
 // On ajoute "Tout" au début
 const categories = ["Tout", ...availableCategories];
@@ -797,7 +801,7 @@ const slides = [
 
 				<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10" id="product-grid">
 					{allProducts && allProducts.map((product) => {
-						const isEpuise = Array.isArray(slugsEpuises) && slugsEpuises.includes(product.id);
+						const isEpuise = slugsEpuisesSet.has(product.id);
 						const isPreorder = product.data.preorder === true;
 						const productIdClean = typeof product.id === "string" ? product.id.replace(/[^a-zA-Z0-9]/g, "") : "";
 
@@ -869,7 +873,7 @@ const slides = [
 												{Array.isArray(group.options) && group.options.map((option) => (
 													<button 
 														type="button"
-														class={`variant-btn px-4 py-2 rounded-xl border-2 border-cat-pine text-[10px] font-black uppercase tracking-tighter bg-white text-cat-pine ${Array.isArray(ingredientsEpuises) && ingredientsEpuises.includes(option.name.toLowerCase()) ? 'opacity-30 line-through pointer-events-none' : ''}`}
+														class={`variant-btn px-4 py-2 rounded-xl border-2 border-cat-pine text-[10px] font-black uppercase tracking-tighter bg-white text-cat-pine ${ingredientsEpuisesSet.has(option.name.toLowerCase()) ? 'opacity-30 line-through pointer-events-none' : ''}`}
 														data-target={`img-${productIdClean}`}
 														data-image={option.image || product.data.image}
 													>
@@ -888,7 +892,7 @@ const slides = [
 												{product.data.extras.map((extra) => (
 													<button 
 														type="button"
-														class={`extra-btn px-3 py-1.5 rounded-xl border-2 border-dashed border-cat-pine/20 text-[10px] font-bold text-cat-pine bg-white flex items-center gap-1.5 ${Array.isArray(ingredientsEpuises) && ingredientsEpuises.includes(extra.name.toLowerCase()) ? 'opacity-30 line-through pointer-events-none' : ''}`}
+														class={`extra-btn px-3 py-1.5 rounded-xl border-2 border-dashed border-cat-pine/20 text-[10px] font-bold text-cat-pine bg-white flex items-center gap-1.5 ${ingredientsEpuisesSet.has(extra.name.toLowerCase()) ? 'opacity-30 line-through pointer-events-none' : ''}`}
 														data-extra-name={extra.name}
 														data-extra-price={extra.price}
 													>
@@ -1104,7 +1108,14 @@ const slides = [
 
 	<script>
 		import { supabase } from '../lib/supabase';
-
+		import {
+			attachCategoryFilterHandlers,
+			attachGlobalInteractionHandlers,
+			getHomePageElements,
+			initDescriptionToggles,
+			setupModalActions,
+			setupLiveStockSync
+		} from '../scripts/home';
 		document.addEventListener('DOMContentLoaded', () => {
 			// --- 1. ÉTAT GLOBAL & OUTILS ---
 			let cart = [];
@@ -1150,93 +1161,11 @@ const slides = [
 			});
 
 			// --- 2. SÉLECTEURS UI ---
-			const elements = {
-				// Cookies & Légal
-				banner: document.getElementById('cookie-banner'),
-				acceptBtn: document.getElementById('accept-cookies'),
-				declineBtn: document.getElementById('decline-cookies'),
+			const elements = getHomePageElements();
+			let closeAllModals = () => {};
 
-				// Menu Mobile
-				menuBtn: document.getElementById('menu-btn'),
-				mobileMenu: document.getElementById('mobile-menu'),
-
-				// Panier (Interface)
-				openCart: document.getElementById('open-cart'),
-				cartModal: document.getElementById('cart-modal'),
-				closeCartBtn: document.getElementById('close-cart-btn'),
-				cartOverlay: document.getElementById('close-cart-overlay'),
-				cartCountBadge: document.getElementById('cart-count'),
-				cartItemsList: document.getElementById('cart-items-list'),
-				totalPrice: document.getElementById('cart-total-price'),
-
-				// Produits & Filtres
-				categoryBtns: document.querySelectorAll('.filter-btn'),
-				productCards: document.querySelectorAll('.product-card'),
-				variantBtns: document.querySelectorAll('.variant-btn'),
-				addToCartBtns: document.querySelectorAll('.add-to-cart-btn'),
-
-				// Envoi Commande (Boutons du Panier)
-				whatsappBtn: document.getElementById('send-order-whatsapp'),
-				smsBtn: document.getElementById('send-order-sms'),
-
-				// Profil & Fidélité
-				openProfile: document.getElementById('open-profile'),
-				profileModal: document.getElementById('profile-modal'),
-				closeProfileBtn: document.getElementById('close-profile-btn'),
-				profileOverlay: document.getElementById('close-profile-overlay'),
-				checkLoyaltyBtn: document.getElementById('check-loyalty'),
-
-				// Champs de saisie (Inputs)
-				clientNameInput: document.getElementById('client-name'),
-				clientPhoneInput: document.getElementById('client-phone'),
-				lookupPhoneInput: document.getElementById('lookup-phone'),
-
-				// Nouveau Modal de Confirmation Perso
-				confirmModal: document.getElementById('confirm-order-modal'),
-				confirmDetails: document.getElementById('confirm-details'),
-				finalWhatsappBtn: document.getElementById('final-whatsapp-btn'),
-				noWhatsappBtn: document.getElementById('no-whatsapp-btn'),
-				smsFallback: document.getElementById('sms-fallback-msg'),
-				cancelBtn: document.getElementById('cancel-confirm-btn'),
-				confirmAltBtn: document.getElementById('confirm-alt-btn')
-			};
-
-			// --- LOGIQUE DE FILTRAGE (VERSION TOLÉRANTE) ---
-			elements.categoryBtns.forEach(btn => {
-				btn.addEventListener('click', (e) => {
-					e.preventDefault();
-					// On récupère la valeur et on la nettoie
-					const rawFilter = btn.getAttribute('data-filter') || btn.getAttribute('data-category');
-					const filterValue = rawFilter ? rawFilter.trim().toLowerCase() : 'all';
-					
-					console.log("Btn cliqué:", filterValue);
-
-					// 1. Visuel des boutons
-					elements.categoryBtns.forEach(b => b.classList.remove('bg-cat-yellow'));
-					btn.classList.add('bg-cat-yellow');
-
-					// 2. Filtrage
-					elements.productCards.forEach(card => {
-						const rawCardCat = card.getAttribute('data-category');
-						const cardCategory = rawCardCat ? rawCardCat.trim().toLowerCase() : '';
-						
-						console.log("Vérif carte:", cardCategory, "vs", filterValue);
-
-						if (filterValue === "all" || filterValue === "tout" || cardCategory === filterValue) {
-							card.style.setProperty('display', 'flex', 'important');
-							card.classList.remove('hidden');
-							card.style.opacity = "1";
-						} else {
-							card.style.setProperty('display', 'none', 'important');
-							card.classList.add('hidden');
-						}
-					});
-				});
-			});
-
-			// On active le bouton "Tout" par défaut au démarrage
-			const defaultBtn = document.querySelector('[data-filter="all"]');
-			if (defaultBtn) defaultBtn.classList.add('bg-cat-yellow');
+			// --- LOGIQUE DE FILTRAGE ---
+			attachCategoryFilterHandlers(elements);
 
 			// --- 3. GESTION DES COOKIES & MÉMOIRE ---
 			const hideBanner = () => {
@@ -1334,112 +1263,8 @@ const slides = [
 				updateCartUI();
 			};
 
-			// --- 1. GESTION DES CLICS (Variantes, Suppléments & Descriptions) ---
-			document.addEventListener('click', (e) => {
-				
-				// On définit les cibles potentielles
-				const extraBtn = e.target.closest('.extra-btn');
-				const variantBtn = e.target.closest('.variant-btn');
-				const toggleBtn = e.target.closest('.toggle-description');
-
-				// CAS A : LES SUPPLÉMENTS
-				if (extraBtn) {
-					extraBtn.classList.toggle('extra-selected');
-					return; 
-				}
-
-				// CAS B : LES VARIANTES
-				if (variantBtn) {
-					e.preventDefault();
-					const container = variantBtn.closest('.group-container'); 
-					const targetImgId = variantBtn.getAttribute('data-target');
-					const newSrc = variantBtn.getAttribute('data-image');
-					const productImg = document.getElementById(targetImgId);
-
-					if (container) {
-						// 1. On retire l'état "actif" de tous les boutons du groupe uniquement
-						container.querySelectorAll('.variant-btn').forEach(b => {
-							b.classList.remove('active-variant', 'bg-cat-yellow');
-							b.classList.add('bg-white');
-						});
-						
-						// 2. On active le bouton cliqué
-						variantBtn.classList.add('active-variant', 'bg-cat-yellow');
-						variantBtn.classList.remove('bg-white');
-
-						// 3. Changement d'image fluide
-						if (productImg && newSrc && newSrc.trim() !== "") {
-							productImg.style.opacity = '0.5';
-							setTimeout(() => {
-								productImg.src = newSrc;
-								productImg.style.opacity = '1';
-							}, 100);
-						}
-					}
-					return;
-				}
-
-				// CAS C : LE "VOIR PLUS" DES DESCRIPTIONS
-				if (toggleBtn) {
-					e.preventDefault();
-					const container = toggleBtn.closest('.description-container');
-					const text = container.querySelector('.product-description');
-					const isExpanded = text.classList.contains('line-clamp-none');
-					
-					if (isExpanded) {
-						text.classList.remove('line-clamp-none');
-						text.classList.add('line-clamp-3');
-						toggleBtn.textContent = '+ Voir plus';
-					} else {
-						text.classList.remove('line-clamp-3');
-						text.classList.add('line-clamp-none');
-						toggleBtn.textContent = '- Réduire';
-					}
-				}
-
-				// CAS D : CLIC SUR UN ALLERGÈNE
-				const allergenBtn = e.target.closest('.allergen-btn');
-				if (allergenBtn) {
-					e.preventDefault(); // Sécurité
-					// On bascule UNIQUEMENT la classe de sélection
-					// Le CSS se chargera de changer les couleurs grâce au !important
-					allergenBtn.classList.toggle('allergen-selected');
-					return; // On arrête là
-				}
-			});
-
-			// --- GESTION DES JAUGES DE PIMENT ---
-			const spiceLabels = ["Pas de Piment 🌿", "Doux 🌶️", "Relevé 🔥", "Lave 🌋"];
-
-			// Tableau des icônes en SVG pour le curseur
-			const spiceIcons = [
-				"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><text y='18' font-size='16'>🌿</text></svg>",
-				"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><text y='18' font-size='16'>🌶️</text></svg>",
-				"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><text y='18' font-size='16'>🔥</text></svg>",
-				"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><text y='18' font-size='16'>🌋</text></svg>"
-			];
-
-			document.addEventListener('input', (e) => {
-				if (e.target.classList.contains('spice-range')) {
-					const container = e.target.closest('.spice-container') || e.target.closest('div.mb-6');
-					const textLabel = container?.querySelector('.spice-level-text');
-					const val = e.target.value;
-
-					if (textLabel) {
-						textLabel.textContent = spiceLabels[val];
-						
-						// Effet visuel pour le niveau max
-						if (val == 3) {
-							textLabel.classList.add('animate-pulse', 'text-red-700');
-						} else {
-							textLabel.classList.remove('animate-pulse', 'text-red-700');
-						}
-					}
-
-					// On change l'icône du curseur en modifiant la variable CSS
-					e.target.style.setProperty('--spice-icon', `url("${spiceIcons[val]}")`);
-				}
-			});
+			// --- INTERACTIONS GLOBALES (variantes, extras, allergènes, piment) ---
+			attachGlobalInteractionHandlers();
 
 			// --- 2. Mise à jour du bouton d'ajout au panier ---
 			elements.addToCartBtns.forEach(btn => {
@@ -1802,118 +1627,11 @@ const slides = [
 			});
 
 			// --- GESTION DU "VOIR PLUS" DYNAMIQUE ---
-			const initDescriptions = () => {
-				const containers = document.querySelectorAll('.description-container');
-				containers.forEach(container => {
-					const textEl = container.querySelector('.product-description');
-					const btn = container.querySelector('.toggle-description');
+			initDescriptionToggles();
 
-					if (textEl && btn) {
-						// On vérifie si le texte dépasse réellement la hauteur de 3 lignes
-						const isOverflowing = textEl.scrollHeight > textEl.clientHeight;
-
-						if (isOverflowing) {
-							btn.classList.remove('hidden'); // On affiche le bouton
-						} else {
-							btn.remove(); // On supprime le bouton s'il n'y a pas de débordement
-						}
-					}
-				});
-			};
-
-			// --- 7. MODAL ACTIONS ---
-			const closeAllModals = () => {
-				elements.cartModal?.classList.add('hidden');
-				elements.profileModal?.classList.add('hidden');
-				document.body.style.overflow = '';
-			};
-
-			elements.openCart?.addEventListener('click', () => {
-				updateCartUI(false);
-				elements.cartModal?.classList.remove('hidden');
-				document.body.style.overflow = 'hidden';
-			});
-
-			elements.openProfile?.addEventListener('click', () => {
-				elements.profileModal?.classList.remove('hidden');
-				document.body.style.overflow = 'hidden';
-			});
-
-			[elements.closeCartBtn, elements.cartOverlay, elements.closeProfileBtn, elements.profileOverlay].forEach(btn => {
-				btn?.addEventListener('click', closeAllModals);
-			});
-
-			// --- CONNEXION DU BOUTON RÉSERVER ---
-			elements.whatsappBtn?.addEventListener('click', () => {
-				handleOrder('wa');
-			});
-
-			// Si tu as gardé un bouton SMS quelque part, sinon la ligne du dessus suffit
-			elements.smsBtn?.addEventListener('click', () => {
-				handleOrder('sms');
-			});
-
-			// --- 8. SYNCHRONISATION LIVE (PLATS + INGRÉDIENTS) ---
-			const stockChannel = supabase
-				.channel('live-inventory-' + Math.random()) // Canal unique pour éviter les conflits
-				.on('postgres_changes', { 
-					event: 'UPDATE', 
-					schema: 'public', 
-					table: 'stocks' 
-				}, (payload) => {
-					const { product_slug, en_stock } = payload.new;
-					console.log("⚡️ Mise à jour stock :", product_slug, en_stock);
-
-					// CASE A : C'EST UN INGRÉDIENT GLOBAL
-					if (product_slug.startsWith('global:')) {
-						const ingredientName = product_slug.split(':')[1].replace(/-/g, ' ').toLowerCase();
-						console.log("🛠 Ingrédient reçu :", ingredientName);
-
-						const allBtns = document.querySelectorAll('.variant-btn, .extra-btn');
-						allBtns.forEach(btn => {
-							const btnText = btn.textContent.trim().toLowerCase();
-							
-							if (btnText.includes(ingredientName)) {
-								console.log("🎯 Match trouvé sur :", btnText);
-								if (en_stock === false) {
-									btn.classList.add('opacity-30', 'pointer-events-none', 'line-through');
-									btn.classList.remove('active-variant', 'bg-cat-yellow');
-								} else {
-									btn.classList.remove('opacity-30', 'pointer-events-none', 'line-through');
-								}
-							}
-						});
-					}
-
-					// CASE B : PLAT COMPLET (Correction des visuels)
-					const productCard = document.querySelector(`[data-product-id="${product_slug}"]`);
-					if (productCard) {
-						const isEpuise = en_stock === false;
-						const badge = productCard.querySelector('.victime-badge');
-						const productImage = productCard.querySelector('.product-img');
-						const btnAdd = productCard.querySelector('.add-to-cart-btn');
-						const textIndispo = productCard.querySelector('.status-indisponible');
-						const preorderBadge = productCard.querySelector('.preorder-badge');
-
-						if (isEpuise) {
-							productCard.classList.add('opacity-50', 'pointer-events-none');
-							productImage?.classList.add('grayscale');
-							badge?.classList.remove('hidden');
-							btnAdd?.classList.add('hidden');
-							textIndispo?.classList.remove('hidden');
-							preorderBadge?.classList.add('hidden');
-						} else {
-							productCard.classList.remove('opacity-50', 'pointer-events-none');
-							productImage?.classList.remove('grayscale');
-							badge?.classList.add('hidden');
-							btnAdd?.classList.remove('hidden');
-							textIndispo?.classList.add('hidden');
-							// Le preorder badge réapparaît si la carte est de type preorder (logique simplifiée)
-							if (productCard.classList.contains('border-cat-teal/40')) preorderBadge?.classList.remove('hidden');
-						}
-					}
-				})
-				.subscribe();
+			// --- MODALS / ACTIONS / STOCK LIVE ---
+			closeAllModals = setupModalActions(elements, updateCartUI, handleOrder).closeAllModals;
+			const stockChannel = setupLiveStockSync(supabase);
 
 			// --- INITIALISATION ---
 			if (!getCatCookie('catseyes_consent') && elements.banner) {
@@ -1921,7 +1639,7 @@ const slides = [
 			}
 
 			restoreUserSession();
-			setTimeout(initDescriptions, 100);
+			setTimeout(initDescriptionToggles, 100);
 		});
 	</script>
 
