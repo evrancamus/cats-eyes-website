@@ -69,7 +69,7 @@ const slides = [
         subtitle: "L'ADN Cat's Eyes",
         icon: "/icons/healthy.png",
         color: "#126b13",
-        description: "Toutes nos recettes sont cuisinées minute, à partir d'ingrédients frais et de qualité.<br><br>Nos soupes et bouillons vous offrent une authenticité rare et une véritable expérience sensorielle..!"
+        description: "Toutes nos recettes sont cuisinées minute, à partir d'ingrédients frais et de qualité.<br><br>Nos soupes et bouillons vous offrent une authenticité rare, chacun de nos plats est un voyage"
     },
     {
         image: "/images/concept-4.webp",
@@ -260,7 +260,7 @@ const slides = [
 	}
 	</style>
 	
-	<section id="traiteur" class="w-full bg-cat-wood py-20 px-6 overflow-hidden">
+	<section id="traiteur" class="w-full bg-cat-pine py-20 px-6 overflow-hidden">
 		<div class="max-w-7xl mx-auto flex flex-col lg:flex-row gap-12 items-start">
 			
 			<div class="w-full lg:w-3/5 relative group">
@@ -307,26 +307,26 @@ const slides = [
 			<div class="w-full lg:w-2/5 lg:sticky lg:top-32">
 				
 				<div class="flex flex-wrap items-center gap-3 mb-10">
-					<button id="tab-traiteur" class="px-6 py-2 rounded-full font-black text-[10px] uppercase tracking-widest transition-all duration-500 border-2 border-cat-pine/10 shadow-sm bg-cat-yellow text-cat-pine">
+					<button id="tab-traiteur" class="px-6 py-2 rounded-full font-black text-[10px] uppercase tracking-widest transition-all duration-500 border-2 border-white/10 shadow-sm bg-cat-yellow text-cat-pine">
 						Traiteur & Evénementiel
 					</button>
 					
-					<button id="tab-cours" class="px-6 py-2 rounded-full font-black text-[10px] uppercase tracking-widest transition-all duration-500 border-2 border-cat-pine/10 shadow-sm bg-transparent text-cat-pine/40 hover:text-cat-pine hover:bg-cat-pine/5">
+					<button id="tab-cours" class="px-6 py-2 rounded-full font-black text-[10px] uppercase tracking-widest transition-all duration-500 border-2 border-white/10 shadow-sm bg-transparent text-white/40 hover:text-cat-pine hover:bg-cat-pine/5">
 						Ateliers Culinaires
 					</button>
 				</div>
 
-				<h2 id="service-title" class="text-4xl md:text-5xl font-bold text-cat-pine italic mb-8 leading-tight transition-all duration-500">
+				<h2 id="service-title" class="text-4xl md:text-5xl font-bold text-white italic mb-8 leading-tight transition-all duration-500">
 					Traiteur sur Mesure, <br/> façon Cat's Eyes.
 				</h2>
 
-				<div class="space-y-6 text-cat-pine/80 text-lg leading-relaxed italic">
+				<div class="space-y-6 text-white/80 text-lg leading-relaxed italic">
 					<p id="service-desc" class="transition-all duration-500">Que ce soit pour un séminaire d'entreprise à Orléans ou une fête privée, nous transformons vos événements en expériences sensorielles... dans nos locaux ou ailleurs !</p>
 					<p id="service-subdesc" class="transition-all duration-500">Brochettes de fruits givrés, hors-d'œuvre asiatiques raffinés, plateaux de jus pressés à la minute, soupes signatures et plein d'autres plats succulents !</p>
 				</div>
 
 				<div class="mt-12 flex flex-col gap-4">
-					<a id="service-btn-wa" href="https://wa.me/33631541175?text=Bonjour,%20je%20souhaite%20des%20infos%20sur%20le%20service%20traiteur" target="_blank" class="bg-cat-pine text-white text-center px-10 py-5 rounded-full font-bold text-lg shadow-xl hover:bg-cat-teal transition-all active:scale-95 duration-500">
+					<a id="service-btn-wa" href="https://wa.me/33631541175?text=Bonjour,%20je%20souhaite%20des%20infos%20sur%20le%20service%20traiteur" target="_blank" class="bg-cat-teal text-white text-center px-10 py-5 rounded-full font-bold text-lg shadow-xl hover:bg-cat-teal transition-all active:scale-95 duration-500">
 						<span id="service-label-wa">Discuter sur WhatsApp</span>
 					</a>
 					<p class="text-xs text-center text-cat-pine/50 uppercase font-bold tracking-widest">Réponse sous 24h</p>
@@ -338,7 +338,7 @@ const slides = [
 	<script define:vars={{ slides }}>
 		const serviceData = {
 			traiteur: {
-				title: "L'art de recevoir, <br/> façon Cat's Eyes.",
+				title: "Traiteur sur Mesure, <br/> façon Cat's Eyes.",
 				desc: "Que ce soit pour un séminaire d'entreprise à Orléans ou une fête privée, nous transformons vos événements en expériences sensorielles... dans nos locaux ou ailleurs !",
 				subDesc: "Brochettes de fruits givrés, hors-d'œuvre asiatiques raffinés, plateaux de jus pressés à la minute, soupes signatures et plein d'autres plats succulents !",
 				btn: "Discuter sur WhatsApp",
@@ -347,9 +347,9 @@ const slides = [
 			},
 			cours: {
 				title: "Partagez un moment Authentique!",
-				desc: "Plongez dans l'univers de la cuisine traditionelle d'Asie du Sud-Est lors de nos cours de cuisine à Orléans. Venez partager notre univers au travers d'une expérience créative, atypique et conviale !",
+				desc: "Plongez dans l'univers de la cuisine traditionelle d'Asie du Sud-Est lors de nos cours de cuisine à Orléans. Découvrez notre univers au travers d'une expérience créative, atypique et conviale !",
 				subDesc: "Ateliers en petits groupes, matériel fourni et dégustation dans une ambiance chaleureuse.",
-				btn: "Réserver un atelier",
+				btn: "Réserver un Atelier",
 				waMsg: "Bonjour, j'aimerais connaître les prochaines dates des cours de cuisine",
 				images: [1, 2, 3].map(i => `/images/atelier-${i}.webp`)
 			}
@@ -421,10 +421,10 @@ const slides = [
 
 			if (currentService === 'traiteur') {
 				tabTraiteur.className = "px-6 py-2 rounded-full font-black text-[10px] uppercase tracking-widest transition-all duration-500 border-2 border-cat-pine/10 shadow-sm bg-cat-yellow text-cat-pine";
-				tabCours.className = "px-6 py-2 rounded-full font-black text-[10px] uppercase tracking-widest transition-all duration-500 border-2 border-cat-pine/10 shadow-sm bg-transparent text-cat-pine/40 hover:text-cat-pine";
+				tabCours.className = "px-6 py-2 rounded-full font-black text-[10px] uppercase tracking-widest transition-all duration-500 border-2 border-white/10 shadow-sm bg-transparent text-white/40 hover:text-white";
 			} else {
 				tabCours.className = "px-6 py-2 rounded-full font-black text-[10px] uppercase tracking-widest transition-all duration-500 border-2 border-cat-pine/10 shadow-sm bg-cat-yellow text-cat-pine";
-				tabTraiteur.className = "px-6 py-2 rounded-full font-black text-[10px] uppercase tracking-widest transition-all duration-500 border-2 border-cat-pine/10 shadow-sm bg-transparent text-cat-pine/40 hover:text-cat-pine";
+				tabTraiteur.className = "px-6 py-2 rounded-full font-black text-[10px] uppercase tracking-widest transition-all duration-500 border-2 border-white/10 shadow-sm bg-transparent text-white/40 hover:text-white";
 			}
 
 			const els = [serviceTitle, serviceDesc, serviceSubDesc, serviceBtnWA];
@@ -1686,8 +1686,12 @@ const slides = [
 		</div>
 
 		<div class="max-w-7xl mx-auto mt-16 pt-8 border-t border-cat-wood/5 flex flex-col md:flex-row justify-between items-center gap-4 text-[10px] uppercase tracking-widest opacity-40">
-			<p>© 2026 CAT'S EYES - TOUS DROITS RÉSERVÉS [cite: 1]</p>
-			<p>CONCEPTION : EVRAN CAMUS SOLUTIONS DIGITALES [cite: 2]</p>
+			<p>© 2026 CAT'S EYES - TOUS DROITS RÉSERVÉS</p>
+			
+			<p class="text-center md:text-right">
+				CONCEPTION : HYDRE - SOLUTIONS DIGITALES <br /> 
+				+33762351391
+			</p>
 		</div>
 	</footer>
 
@@ -1927,12 +1931,25 @@ const slides = [
 					<div class="text-5xl font-black text-cat-pine"><span id="user-points">0</span> <span class="text-xl">pts</span></div>
 				</div>
 				
-				<div class="space-y-4">
-					<p class="text-sm font-bold italic text-cat-pine">Ma progression :</p>
-					<div class="w-full bg-cat-pine/10 h-4 rounded-full overflow-hidden">
-						<div id="points-bar" class="bg-cat-teal h-full transition-all duration-1000" style="width: 0%"></div>
+				<div class="space-y-4 bg-cat-pine/[0.03] p-6 rounded-[2rem] border border-cat-pine/5">
+					<div class="flex justify-between items-end">
+						<div>
+							<p class="text-[11px] font-black italic text-cat-pine uppercase tracking-widest">1 point collecté tous les 10€ dépensés</p>
+						</div>
+						<div class="flex flex-col items-end">
+							<span class="text-[12px] font-black text-cat-teal italic uppercase">🎁 10€ offerts</span>
+						</div>
 					</div>
-					<p class="text-[10px] text-center uppercase font-bold text-cat-pine/50">Plus que <span id="points-needed">10</span> points avant votre cadeau !</p>
+
+					<div class="w-full bg-cat-pine/10 h-3 rounded-full overflow-hidden shadow-inner">
+						<div id="points-bar" class="bg-cat-teal h-full transition-all duration-700" style="width: 30%"></div>
+					</div>
+					
+					<div class="flex justify-between items-center px-1">
+						<p class="text-[9px] uppercase font-black tracking-widest text-cat-pine/50">
+							Plus que <span id="points-needed" class="text-cat-teal text-xs">7</span> points avant votre bon d'achat !
+						</p>
+					</div>
 				</div>
 
 				<button id="change-phone-btn" class="mt-8 text-xs font-bold text-cat-teal uppercase tracking-widest hover:underline cursor-pointer">
