@@ -1,85 +1,107 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import { getCollection } from 'astro:content';
-import { supabase } from '../lib/supabase'; // Vérifie bien que le chemin est correct
+import { supabase } from '../lib/supabase';
 
-const allProducts = await getCollection('menu');
-const categories = ["Tout", "Soupes", "Plats", "Desserts", "Hors d'œuvres"];
+// 1. RÉCUPÉRATION DES DONNÉES EN PARALLÈLE (Plus rapide)
+const [allProductsRaw, settingsRes, stocksRes] = await Promise.all([
+    getCollection('menu'),
+    supabase.from('settings').select('value').eq('key', 'vacation_mode').single(),
+    supabase.from('stocks').select('product_slug, en_stock')
+]);
+
+// 2. GESTION DU MODE VACANCES
+const isVacation = settingsRes.data?.value || false;
+
+// 3. GESTION DES STOCKS (Plats et Ingrédients)
+const stocksData = stocksRes.data || [];
+
+// Tableau des IDs de plats épuisés (ex: ["banh-cuon"])
+const slugsEpuises = stocksData
+    .filter(s => s.en_stock === false && !s.product_slug.startsWith('global:'))
+    .map(s => s.product_slug);
+
+// Tableau des ingrédients globaux épuisés (nettoyés pour la comparaison)
+const ingredientsEpuises = stocksData
+    .filter(s => s.en_stock === false && s.product_slug.startsWith('global:'))
+    .map(s => s.product_slug.split(':')[1].replace(/-/g, ' ').toLowerCase());
+
+// 4. TRI DES PRODUITS (Best Sellers en premier)
+const allProducts = allProductsRaw.sort((a, b) => {
+    const aBest = a.data.is_bestseller || false;
+    const bBest = b.data.is_bestseller || false;
+
+    if (aBest && !bBest) return -1;
+    if (!aBest && bBest) return 1;
+    return 0; // On garde l'ordre original pour le reste
+});
+
+// 5. GÉNÉRATION DYNAMIQUE DES CATÉGORIES
+// On récupère toutes les catégories présentes dans les fichiers markdown/json
+const dynamicCategories = [...new Set(allProducts.map(p => p.data.category))];
+
+// On définit l'ordre souhaité (optionnel) et on filtre pour ne garder que ce qui existe
+const order = ["Soupes", "Plats", "Desserts", "Hors d'œuvres"];
+const availableCategories = order.filter(cat => dynamicCategories.includes(cat));
+
+// On ajoute "Tout" au début
+const categories = ["Tout", ...availableCategories];
+
 const restaurantName = "Cat's Eyes";
 
-// --- 1. Récupération des plats complets épuisés ---
-const { data: stocksEpuisesData } = await supabase
-  .from('stocks')
-  .select('product_slug')
-  .eq('en_stock', false);
-
-// On crée le tableau des IDs épuisés (ex: ["banh-cuon.md"])
-const slugsEpuises = stocksEpuisesData?.map(s => s.product_slug) || [];
-
-// --- 2. Récupération des ingrédients globaux épuisés ---
-const { data: globalEpuisesData } = await supabase
-  .from('stocks')
-  .select('product_slug')
-  .filter('product_slug', 'like', 'global:%')
-  .eq('en_stock', false);
-
-// Ajoute .toLowerCase() par sécurité
-const ingredientsEpuises = globalEpuisesData?.map(s => 
-    s.product_slug.split(':')[1].replace(/-/g, ' ').toLowerCase()
-) || [];
-
-// 1. On définit les données du slider ADN
+// 6. CONFIGURATION GÉNÉRALE
 const slides = [
-{
-	image: "/images/concept-1.webp",
-	title: "Naly et son équipe pour vous servir !",
-	subtitle: "L'ADN Cat's Eyes",
-	icon: "/icons/sun-hand-drawn-irregular-shape.png",
-    color: "#FFD700",
-    description: "Toujours Souriante et bienveillante, Naly est propriétaire du restaurant depuis 2021, elle vous accueillera toutes les semaines entre Mardi et Samedi de 12h30 et 19h!"
-},
-{
-	image: "/images/concept-2.webp",
-	title: "100% frais, <br> 100% fait maison ! ",
-	subtitle: "L'ADN Cat's Eyes",
-	icon: "/icons/healthy.png",
-    color: "#126b13",
-    description: "Toutes nos recettes sont cuisinées minute, à partir d'ingrédients frais et de qualité.<br><br>Nos soupes et bouillons mijotent plus de 12h pour vous offrir une authenticité rare et une véritable expérience sensorielle !"
-},
-{
-	image: "/images/concept-4.webp",
-	title: "Propreté et soin impeccables !",
-	subtitle: "L'ADN Cat's Eyes",
-	icon: "/icons/health.png",
-    color: "#388fa2",
-    description: "Nous appliquons une rigueur intarissable concernant la propreté de nos espaces d'accueil.<br><br>Chacune de nos présentations est fignolée avec la plus grande attention !"
-},
-{
-	image: "/images/concept-3.webp",
-	title: "Un lieu vivant, et chaleureux !",
-	subtitle: "L'ADN Cat's Eyes",
-	icon: "/icons/soup-hand-drawn-hot-food-bowl.png",
-    color: "#e472e0",
-    description: "Musique, couleurs, douceur...<br>On se sent bien chez nous ! <br> <br>Nous avons travaillé chaque petit détail pour créer une atmosphère douce, et relaxante... Venez vous détendre et rencontrer Light, notre mascotte !"
-},
-{
-	image: "/images/concept-5.webp",
-	title: "Des instruments à disposition !",
-	subtitle: "L'ADN Cat's Eyes",
-	icon: "/icons/musical-note-hand-drawn-outline.png",
-    color: "#FFD700",
-    description: "Un piano tout jaune tout neuf, guitare et percussion à disposition... <br><br> Vous pouvez aussi amener vos propres instruments si vous voulez Jammer !"
-},
-{
-	image: "/images/concept-6.webp",
-	title: "Club d'échec en devenir !",
-	subtitle: "L'ADN Cat's Eyes",
-	icon: "/icons/strategy.png",
-    color: "#388fa2",
-    description: "Que c'est agréable de profiter d'une bonne partie d'échecs en se rafraîchissant d'un bon jus pressé minute... Ou une soupe... Ou les deux !<br> <br> Nos jeux sont en libre service."
-},
+    {
+        image: "/images/concept-1.webp",
+        title: "Naly et son équipe pour vous servir !",
+        subtitle: "L'ADN Cat's Eyes",
+        icon: "/icons/sun-hand-drawn-irregular-shape.png",
+        color: "#FFD700",
+        description: "Toujours Souriante et bienveillante, Naly est propriétaire du restaurant depuis 2021, elle vous accueillera toutes les semaines entre Mardi et Samedi de 12h30 et 19h!"
+    },
+    {
+        image: "/images/concept-2.webp",
+        title: "100% frais, <br> 100% fait maison ! ",
+        subtitle: "L'ADN Cat's Eyes",
+        icon: "/icons/healthy.png",
+        color: "#126b13",
+        description: "Toutes nos recettes sont cuisinées minute, à partir d'ingrédients frais et de qualité.<br><br>Nos soupes et bouillons mijotent plus de 12h pour vous offrir une authenticité rare et une véritable expérience sensorielle !"
+    },
+    {
+        image: "/images/concept-4.webp",
+        title: "Propreté et soin impeccables !",
+        subtitle: "L'ADN Cat's Eyes",
+        icon: "/icons/health.png",
+        color: "#388fa2",
+        description: "Nous appliquons une rigueur intarissable concernant la propreté de nos espaces d'accueil.<br><br>Chacune de nos présentations est fignolée avec la plus grande attention !"
+    },
+    {
+        image: "/images/concept-3.webp",
+        title: "Un lieu vivant, et chaleureux !",
+        subtitle: "L'ADN Cat's Eyes",
+        icon: "/icons/soup-hand-drawn-hot-food-bowl.png",
+        color: "#e472e0",
+        description: "Musique, couleurs, douceur...<br>On se sent bien chez nous ! <br> <br>Nous avons travaillé chaque petit détail pour créer une atmosphère douce, et relaxante... Venez vous détendre et rencontrer Light, notre mascotte !"
+    },
+    {
+        image: "/images/concept-5.webp",
+        title: "Des instruments à disposition !",
+        subtitle: "L'ADN Cat's Eyes",
+        icon: "/icons/musical-note-hand-drawn-outline.png",
+        color: "#FFD700",
+        description: "Un piano tout jaune tout neuf, guitare et percussion à disposition... <br><br> Vous pouvez aussi amener vos propres instruments si vous voulez Jammer !"
+    },
+    {
+        image: "/images/concept-6.webp",
+        title: "Club d'échec en devenir !",
+        subtitle: "L'ADN Cat's Eyes",
+        icon: "/icons/strategy.png",
+        color: "#388fa2",
+        description: "Que c'est agréable de profiter d'une bonne partie d'échecs en se rafraîchissant d'un bon jus pressé minute... Ou une soupe... Ou les deux !<br> <br> Nos jeux sont en libre service."
+    },
 ];
 ---
+
 <Layout title="Accueil">
 	
 	<header class="bg-cat-yellow py-4 px-6 sticky top-0 z-50 shadow-md">
@@ -723,192 +745,239 @@ const slides = [
 
 	<section id="menu" class="w-full py-24 bg-white px-6">
 		<div class="max-w-7xl mx-auto">
-			<div class="text-center mb-16">
-				<h2 class="text-cat-teal font-black uppercase tracking-widest text-[10px] mb-4 italic">La Carte</h2>
-				<h3 class="text-5xl font-bold text-cat-pine italic mb-12">Choisissez votre plaisir</h3>
-				
-				<div class="flex flex-wrap justify-center gap-4 mb-16">
-					{categories.map((cat) => (
-						<button 
-							class="filter-btn px-8 py-3 rounded-full border-2 border-cat-pine font-bold uppercase text-xs tracking-widest hover:bg-cat-yellow transition-all active:scale-95"
-							data-category={cat}
-						>
-							{cat}
-						</button>
-					))}
+			<!-- 1. CONDITION MODE VACANCES -->
+			{isVacation ? (
+				// MESSAGE D'ABSENCE STYLISÉ
+				<div class="max-w-3xl mx-auto text-center py-20 px-8 bg-[#f1e7d0] rounded-[4rem] border-4 border-cat-pine shadow-2xl">
+					<div class="mb-8 relative inline-block">
+						<span class="text-8xl block animate-bounce">☀️</span>
+						<span class="absolute -bottom-2 -right-2 text-4xl">⛱️</span>
+					</div>
+					
+					<h2 class="text-cat-teal font-black uppercase tracking-[0.2em] text-sm mb-4 italic">Pause Méritée</h2>
+					<h3 class="text-5xl font-bold text-cat-pine italic mb-8 leading-tight">
+						Votre restaurant <br/> prend l'air !
+					</h3>
+					
+					<div class="w-24 h-1 bg-cat-teal mx-auto mb-8 rounded-full opacity-30"></div>
+					
+					<p class="text-cat-pine/70 font-medium text-lg leading-relaxed max-w-xl mx-auto italic">
+						Cat's Eyes est actuellement fermé pour quelques jours de vacances. 
+						On recharge les batteries pour vous préparer de nouveaux Banh Mi encore plus gourmands !
+					</p>
+					
+					<div class="mt-12">
+						<p class="text-[10px] font-black uppercase tracking-[0.3em] text-cat-pine/40 italic">
+							Suivez-nous sur Instagram pour le retour
+						</p>
+						<a href="https://instagram.com/catseyesorleans" class="inline-block mt-4 text-cat-pine hover:text-cat-teal transition-colors">
+							<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-instagram"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></svg>
+						</a>
+					</div>
 				</div>
-			</div>
+			) : (
+				// 2. AFFICHAGE NORMAL DU MENU (Ton code actuel) 
+				<>
+				<div class="text-center mb-16">
+					<h2 class="text-cat-teal font-black uppercase tracking-widest text-[10px] mb-4 italic">La Carte</h2>
+					<h3 class="text-5xl font-bold text-cat-pine italic mb-12">Choisissez votre plaisir</h3>
+					
+					<div class="flex flex-wrap justify-center gap-4 mb-16">
+						{categories && categories.map((cat) => (
+							<button 
+								class="filter-btn px-8 py-3 rounded-full border-2 border-cat-pine font-bold uppercase text-xs tracking-widest hover:bg-cat-yellow transition-all active:scale-95"
+								data-category={cat}
+								type="button"
+							>
+								{cat}
+							</button>
+						))}
+					</div>
+				</div>
 
-			<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10" id="product-grid">
-				{allProducts.map((product) => {
-					const isEpuise = slugsEpuises.includes(product.id);
-					const isPreorder = product.data.preorder === true;
+				<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10" id="product-grid">
+					{allProducts && allProducts.map((product) => {
+						const isEpuise = Array.isArray(slugsEpuises) && slugsEpuises.includes(product.id);
+						const isPreorder = product.data.preorder === true;
+						const productIdClean = typeof product.id === "string" ? product.id.replace(/[^a-zA-Z0-9]/g, "") : "";
 
-					return (
-						<div 
-							class={`product-card group relative bg-white rounded-[2.5rem] border-2 border-cat-pine overflow-hidden shadow-lg transition-all flex flex-col ${isEpuise ? 'opacity-50 pointer-events-none' : 'hover:-translate-y-2'} ${isPreorder ? 'border-cat-teal/40 bg-cat-teal/[0.01]' : ''}`} 
-							data-category={product.data.category}
-							data-product-id={product.id} 
-						>
-							{/* --- IMAGE & TAGS --- */}
-							<div class="aspect-[4/3] overflow-hidden relative border-b-2 border-cat-pine">
-								<img 
-									id={`img-${product.id.replace(/[^a-zA-Z0-9]/g, '')}`}
-									src={product.data.image} 
-									alt={product.data.title} 
-									class={`product-img w-full h-full object-cover group-hover:scale-105 transition-all duration-500 ${isEpuise ? 'grayscale' : ''}`} 
-								/>
-								
-								{/* Badge "Victime de son succès" - Toujours présent dans le DOM */}
-								<div class={`victime-badge absolute inset-0 bg-cat-pine/20 flex items-center justify-center z-20 ${isEpuise ? '' : 'hidden'}`}>
-									<span class="bg-white text-cat-pine px-4 py-2 rounded-full font-black uppercase text-[10px] tracking-widest shadow-xl border-2 border-cat-pine rotate-[-5deg]">
-										Victime de son succès
-									</span>
-								</div>
-
-								<div class="absolute top-4 left-4 flex flex-wrap gap-2">
-									{product.data.tags?.map((tag) => (
-										<span class="px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider bg-white border border-cat-pine shadow-sm">
-											{tag}
+						return (
+							<div 
+								class={`product-card group relative bg-white rounded-[2.5rem] border-2 border-cat-pine overflow-hidden shadow-lg transition-all flex flex-col ${isEpuise ? 'opacity-50 pointer-events-none' : 'hover:-translate-y-2'} ${isPreorder ? 'border-cat-teal/40 bg-cat-teal/[0.01]' : ''}`} 
+								data-category={product.data.category}
+								data-product-id={product.id} 
+							>
+								{/* --- IMAGE & TAGS --- */}
+								<div class="aspect-[4/3] overflow-hidden relative border-b-2 border-cat-pine">
+									<img 
+										id={`img-${productIdClean}`}
+										src={product.data.image} 
+										alt={product.data.title} 
+										class={`product-img w-full h-full object-cover group-hover:scale-105 transition-all duration-500 ${isEpuise ? 'grayscale' : ''}`} 
+									/>
+									
+									{/* Badge "Victime de son succès" */}
+									<div class={`victime-badge absolute inset-0 bg-cat-pine/20 flex items-center justify-center z-20 ${isEpuise ? '' : 'hidden'}`}>
+										<span class="bg-white text-cat-pine px-4 py-2 rounded-full font-black uppercase text-[10px] tracking-widest shadow-xl border-2 border-cat-pine rotate-[-5deg]">
+											Victime de son succès
 										</span>
+									</div>
+
+									<div class="absolute top-4 left-4 flex flex-wrap gap-2">
+										{Array.isArray(product.data.tags) && product.data.tags.map((tag) => (
+											<span class="px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider bg-white border border-cat-pine shadow-sm">
+												{tag}
+											</span>
+										))}
+									</div>
+								</div>
+
+								{/* BADGE BEST SELLER */}
+								{product.data.is_bestseller && (
+									<div class="absolute top-4 right-4 z-30">
+										<span class="bg-cat-yellow text-cat-pine px-3 py-1.5 rounded-xl font-black uppercase text-[9px] tracking-widest shadow-lg border-2 border-cat-pine flex items-center gap-1 animate-pulse">
+											<span class="text-xs">⭐️</span> Best Seller
+										</span>
+									</div>
+								)}
+
+								{/* --- CONTENU --- */}
+								<div class="p-8 flex-grow flex flex-col">
+									<div class="flex justify-between items-start mb-2">
+										<h4 class="text-2xl font-bold text-cat-pine italic leading-tight">{product.data.title}</h4>
+										<span class="text-xl font-black text-cat-teal">{product.data.price}€</span>
+									</div>
+
+									{/* DESCRIPTION */}
+									<div class="description-container mb-6">
+										<p class="product-description text-cat-pine/70 text-sm italic leading-relaxed line-clamp-3 whitespace-pre-line transition-all duration-300">
+											{product.data.description}
+										</p>
+										{/* On garde une sécurité sur la longueur, mais on cache le bouton par défaut */}
+										{product.data.description && product.data.description.length > 50 && (
+											<button class="toggle-description hidden text-[10px] font-bold text-cat-teal uppercase tracking-widest mt-1 hover:underline" type="button">
+												+ Voir plus
+											</button>
+										)}
+									</div>
+
+									{/* VARIANTES */}
+									{Array.isArray(product.data.variant_groups) && product.data.variant_groups.map((group) => (
+										<div class="mb-4">
+											<p class="text-[9px] font-black uppercase text-cat-teal/60 mb-2 tracking-widest italic">{group.group_name} :</p>
+											<div class="flex flex-wrap gap-2 group-container" data-group={group.group_name}>
+												{Array.isArray(group.options) && group.options.map((option) => (
+													<button 
+														type="button"
+														class={`variant-btn px-4 py-2 rounded-xl border-2 border-cat-pine text-[10px] font-black uppercase tracking-tighter bg-white text-cat-pine ${Array.isArray(ingredientsEpuises) && ingredientsEpuises.includes(option.name.toLowerCase()) ? 'opacity-30 line-through pointer-events-none' : ''}`}
+														data-target={`img-${productIdClean}`}
+														data-image={option.image || product.data.image}
+													>
+														{option.name}
+													</button>
+												))}
+											</div>
+										</div>
 									))}
-								</div>
-							</div>
 
-							{/* --- CONTENU --- */}
-							<div class="p-8 flex-grow flex flex-col">
-								<div class="flex justify-between items-start mb-2">
-									<h4 class="text-2xl font-bold text-cat-pine italic leading-tight">{product.data.title}</h4>
-									<span class="text-xl font-black text-cat-teal">{product.data.price}€</span>
-								</div>
-
-								{/* DESCRIPTION */}
-								<div class="description-container mb-6">
-									<p class="product-description text-cat-pine/70 text-sm italic leading-relaxed line-clamp-3 whitespace-pre-line transition-all duration-300">
-										{product.data.description}
-									</p>
-									{/* On garde une sécurité sur la longueur, mais on cache le bouton par défaut */}
-									{product.data.description.length > 50 && (
-										<button class="toggle-description hidden text-[10px] font-bold text-cat-teal uppercase tracking-widest mt-1 hover:underline">
-											+ Voir plus
-										</button>
+									{/* SUPPLÉMENTS */}
+									{Array.isArray(product.data.extras) && product.data.extras.length > 0 && (
+										<div class="mb-6">
+											<p class="text-[9px] font-black uppercase text-cat-teal/60 mb-2 tracking-widest italic">Suppléments (Extra) :</p>
+											<div class="flex flex-wrap gap-2">
+												{product.data.extras.map((extra) => (
+													<button 
+														type="button"
+														class={`extra-btn px-3 py-1.5 rounded-xl border-2 border-dashed border-cat-pine/20 text-[10px] font-bold text-cat-pine bg-white flex items-center gap-1.5 ${Array.isArray(ingredientsEpuises) && ingredientsEpuises.includes(extra.name.toLowerCase()) ? 'opacity-30 line-through pointer-events-none' : ''}`}
+														data-extra-name={extra.name}
+														data-extra-price={extra.price}
+													>
+														<span>{extra.name}</span>
+														<span class="text-cat-teal">+{extra.price}€</span>
+													</button>
+												))}
+											</div>
+										</div>
 									)}
-								</div>
 
-								{/* VARIANTES */}
-								{product.data.variant_groups && product.data.variant_groups.map((group) => (
-									<div class="mb-4">
-										<p class="text-[9px] font-black uppercase text-cat-teal/60 mb-2 tracking-widest italic">{group.group_name} :</p>
-										<div class="flex flex-wrap gap-2 group-container" data-group={group.group_name}>
-											{group.options.map((option) => (
-												<button 
-													type="button"
-													class={`variant-btn px-4 py-2 rounded-xl border-2 border-cat-pine text-[10px] font-black uppercase tracking-tighter bg-white text-cat-pine ${ingredientsEpuises.includes(option.name.toLowerCase()) ? 'opacity-30 line-through pointer-events-none' : ''}`}
-													data-target={`img-${product.id.replace(/[^a-zA-Z0-9]/g, '')}`}
-													data-image={option.image || product.data.image}
-												>
-													{option.name}
-												</button>
-											))}
+									{/* ALLERGÈNES */}
+									{Array.isArray(product.data.allergens) && product.data.allergens.length > 0 && (
+										<div class="mb-6 p-4 bg-cat-pine/[0.03] rounded-2xl border border-cat-pine/10">
+											<p class="text-[9px] font-black uppercase text-cat-pine/60 mb-2 tracking-widest italic">Retirer des ingrédients :</p>
+											<div class="flex flex-wrap gap-2">
+												{product.data.allergens.map((allergen) => (
+													<button type="button" class="allergen-btn px-3 py-1.5 rounded-xl border-2 border-dashed border-cat-pine/20 text-[10px] font-bold text-cat-pine bg-white">
+														SANS {allergen}
+													</button>
+												))}
+											</div>
 										</div>
-									</div>
-								))}
+									)}
 
-								{/* SUPPLÉMENTS */}
-								{product.data.extras && product.data.extras.length > 0 && (
-									<div class="mb-6">
-										<p class="text-[9px] font-black uppercase text-cat-teal/60 mb-2 tracking-widest italic">Suppléments (Extra) :</p>
-										<div class="flex flex-wrap gap-2">
-											{product.data.extras.map((extra) => (
-												<button 
-													type="button"
-													class={`extra-btn px-3 py-1.5 rounded-xl border-2 border-dashed border-cat-pine/20 text-[10px] font-bold text-cat-pine bg-white flex items-center gap-1.5 ${ingredientsEpuises.includes(extra.name.toLowerCase()) ? 'opacity-30 line-through pointer-events-none' : ''}`}
-													data-extra-name={extra.name}
-													data-extra-price={extra.price}
-												>
-													<span>{extra.name}</span>
-													<span class="text-cat-teal">+{extra.price}€</span>
-												</button>
-											))}
+									{product.data.hasSpice && (
+										<div class="spice-container mb-6 px-2">
+											<div class="flex justify-between items-center mb-3">
+												<p class="text-[9px] font-black uppercase text-cat-pine/40 tracking-widest italic">
+													Intensité :
+												</p>
+												<span class="spice-level-text text-[10px] font-black uppercase italic">
+													Pas de Piment 🌿
+												</span>
+											</div>
+											
+											<div class="relative flex items-center py-4">
+												<input 
+													type="range" 
+													min="0" 
+													max="3" 
+													step="1" 
+													value="0" 
+													class="spice-range w-full h-1.5 bg-white border border-cat-pine/10 rounded-full appearance-none cursor-pointer"
+												/>
+											</div>
 										</div>
-									</div>
-								)}
+									)}
 
-								{/* ALLERGÈNES */}
-								{product.data.allergens && product.data.allergens.length > 0 && (
-									<div class="mb-6 p-4 bg-cat-pine/[0.03] rounded-2xl border border-cat-pine/10">
-										<p class="text-[9px] font-black uppercase text-cat-pine/60 mb-2 tracking-widest italic">Retirer des ingrédients :</p>
-										<div class="flex flex-wrap gap-2">
-											{product.data.allergens.map((allergen) => (
-												<button type="button" class="allergen-btn px-3 py-1.5 rounded-xl border-2 border-dashed border-cat-pine/20 text-[10px] font-bold text-cat-pine bg-white">
-													SANS {allergen}
-												</button>
-											))}
-										</div>
-									</div>
-								)}
-
-								{product.data.hasSpice && (
-									<div class="spice-container mb-6 px-2">
-										<div class="flex justify-between items-center mb-3">
-											<p class="text-[9px] font-black uppercase text-cat-pine/40 tracking-widest italic">
-												Intensité :
-											</p>
-											<span class="spice-level-text text-[10px] font-black text-red-200 uppercase italic">
-												Pas de Piment 🌿
+									{/* FOOTER */}
+									<div class="mt-auto pt-4 border-t border-dashed border-cat-pine/10 flex justify-between items-center gap-2">
+										<div class="flex flex-col">
+											{/* Preorder logic - Toujours conditionnel car lié au temps, pas au stock live */}
+											{isPreorder && !isEpuise && (
+												<div class="preorder-badge flex items-center gap-2 bg-cat-teal/10 border border-cat-teal/20 px-3 py-1.5 rounded-xl shadow-sm">
+													<span class="animate-pulse text-xs">⏳</span>
+													<div class="flex flex-col">
+														<span class="text-[9px] font-black text-cat-teal uppercase leading-none">Sur Réservation</span>
+														<span class="text-[8px] text-cat-teal/70 font-bold uppercase tracking-tighter mt-0.5 italic">Avant 11h pour le Lendemain</span>
+													</div>
+												</div>
+											)}
+											
+											{/* Texte Indisponible */}
+											<span class={`status-indisponible text-[10px] font-black uppercase tracking-widest text-cat-pine/40 italic ${isEpuise ? '' : 'hidden'}`}>
+												Indisponible
 											</span>
 										</div>
 										
-										<div class="relative flex items-center">
-											<input 
-												type="range" 
-												min="0" 
-												max="3" 
-												step="1" 
-												value="0" 
-												class="spice-range w-full h-1.5 bg-white border border-cat-pine/10 rounded-full appearance-none cursor-pointer"
-											/>
-										</div>
+										<button 
+											class={`add-to-cart-btn bg-cat-pine text-white w-12 h-12 rounded-2xl flex items-center justify-center hover:bg-cat-teal shadow-lg active:scale-90 transition-all group/btn ${isEpuise ? 'hidden' : ''}`}
+											data-id={product.id}
+											data-title={product.data.title}
+											data-price={product.data.price}
+											data-preorder={isPreorder ? "true" : "false"}
+											type="button"
+										>
+											<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 group-hover/btn:rotate-90 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+												<path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4" />
+											</svg>
+										</button>
 									</div>
-								)}
-
-								{/* FOOTER */}
-								<div class="mt-auto pt-4 border-t border-dashed border-cat-pine/10 flex justify-between items-center gap-2">
-									<div class="flex flex-col">
-										{/* Preorder logic - Toujours conditionnel car lié au temps, pas au stock live */}
-										{isPreorder && !isEpuise && (
-											<div class="preorder-badge flex items-center gap-2 bg-cat-teal/10 border border-cat-teal/20 px-3 py-1.5 rounded-xl shadow-sm">
-												<span class="animate-pulse text-xs">⏳</span>
-												<div class="flex flex-col">
-													<span class="text-[9px] font-black text-cat-teal uppercase leading-none">Sur Réservation</span>
-													<span class="text-[8px] text-cat-teal/70 font-bold uppercase tracking-tighter mt-0.5 italic">Avant 11h pour le Lendemain</span>
-												</div>
-											</div>
-										)}
-										
-										{/* Texte Indisponible - Géré en live via la classe hidden */}
-										<span class={`status-indisponible text-[10px] font-black uppercase tracking-widest text-cat-pine/40 italic ${isEpuise ? '' : 'hidden'}`}>
-											Indisponible
-										</span>
-									</div>
-									
-									<button 
-										class={`add-to-cart-btn bg-cat-pine text-white w-12 h-12 rounded-2xl flex items-center justify-center hover:bg-cat-teal shadow-lg active:scale-90 transition-all group/btn ${isEpuise ? 'hidden' : ''}`}
-										data-id={product.id}
-										data-title={product.data.title}
-										data-price={product.data.price}
-										data-preorder={isPreorder ? "true" : "false"}
-									>
-										<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 group-hover/btn:rotate-90 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-											<path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4" />
-										</svg>
-									</button>
 								</div>
 							</div>
-						</div>
-					);
-				})}
-			</div>
+						);
+					})}
+				</div>
+				</>
+			)}
 		</div>
 	</section>
 
@@ -1000,14 +1069,14 @@ const slides = [
 			outline: none;
 		}
 
-		/* Le curseur (Thumb) pour Chrome/Safari */
 		.spice-range::-webkit-slider-thumb {
 			-webkit-appearance: none;
 			appearance: none;
-			width: 28px;
-			height: 28px;
+			width: 32px;
+			height: 32px;
 			cursor: pointer;
-			background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><text y='18' font-size='16'>🌶️</text></svg>");
+			/* On utilise une variable CSS avec le piment par défaut */
+			background-image: var(--spice-icon, url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><text y='18' font-size='16'>🌿</text></svg>"));
 			background-repeat: no-repeat;
 			background-position: center;
 			background-color: transparent;
@@ -1015,15 +1084,13 @@ const slides = [
 			transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 		}
 
-		/* Le curseur pour Firefox */
 		.spice-range::-moz-range-thumb {
-			width: 28px;
-			height: 28px;
+			width: 32px;
+			height: 32px;
 			cursor: pointer;
-			background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><text y='18' font-size='16'>🌶️</text></svg>");
+			background-image: var(--spice-icon, url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><text y='18' font-size='16'>🌿</text></svg>"));
 			background-repeat: no-repeat;
 			background-position: center;
-			background-color: transparent;
 			border: none;
 			transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 		}
@@ -1342,23 +1409,35 @@ const slides = [
 			});
 
 			// --- GESTION DES JAUGES DE PIMENT ---
-			const spiceLabels = ["Pas de Piment 🌿", "Doux 🌶️", "Relevé 🌶️🌶️", "Lave 🌋"];
+			const spiceLabels = ["Pas de Piment 🌿", "Doux 🌶️", "Relevé 🔥", "Lave 🌋"];
 
-			// On utilise la délégation d'événement pour que ça marche même si on ajoute des plats dynamiquement
+			// Tableau des icônes en SVG pour le curseur
+			const spiceIcons = [
+				"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><text y='18' font-size='16'>🌿</text></svg>",
+				"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><text y='18' font-size='16'>🌶️</text></svg>",
+				"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><text y='18' font-size='16'>🔥</text></svg>",
+				"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><text y='18' font-size='16'>🌋</text></svg>"
+			];
+
 			document.addEventListener('input', (e) => {
 				if (e.target.classList.contains('spice-range')) {
 					const container = e.target.closest('.spice-container') || e.target.closest('div.mb-6');
 					const textLabel = container?.querySelector('.spice-level-text');
+					const val = e.target.value;
+
 					if (textLabel) {
-						textLabel.textContent = spiceLabels[e.target.value];
+						textLabel.textContent = spiceLabels[val];
 						
 						// Effet visuel pour le niveau max
-						if (e.target.value == 3) {
+						if (val == 3) {
 							textLabel.classList.add('animate-pulse', 'text-red-700');
 						} else {
 							textLabel.classList.remove('animate-pulse', 'text-red-700');
 						}
 					}
+
+					// On change l'icône du curseur en modifiant la variable CSS
+					e.target.style.setProperty('--spice-icon', `url("${spiceIcons[val]}")`);
 				}
 			});
 

@@ -3,6 +3,7 @@ title: Phô (Bouillon Boeuf)
 price: 15
 category: Soupes
 preorder: false
+is_bestseller: true
 description: >-
   Une délicieuse base de bouillon au boeuf fait-maison et personnalisable selon
   vos envies. 

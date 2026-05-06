@@ -50,6 +50,11 @@ const sortedIngredients = Array.from(allIngredients).sort();
                         <p class="text-[10px] font-bold uppercase tracking-widest text-cat-pine/40 mt-1">Disponibilité immédiate</p>
                     </div>
                 </div>
+
+                <button id="vacation-toggle" class="px-6 py-2 rounded-full font-black uppercase text-[10px] tracking-widest transition-all border-2 shadow-lg active:scale-95">
+                    Chargement...
+                </button>
+
             </div>
         </header>
 
@@ -121,29 +126,59 @@ const sortedIngredients = Array.from(allIngredients).sort();
         import { supabase } from '../../lib/supabase';
 
         async function initStock() {
-            // 1. Auth Check
+            // --- 1. AUTH CHECK ---
             const { data: { session } } = await supabase.auth.getSession();
             if (!session) return window.location.replace('/admin/login');
             document.documentElement.style.visibility = 'visible';
 
-            // 2. Récupérer les stocks depuis Supabase
-            const { data: currentStocks, error } = await supabase.from('stocks').select('*');
-            if (error) console.error("Erreur Supabase:", error);
+            // --- 2. RÉCUPÉRATION DES DONNÉES (STOCKS + SETTINGS) ---
+            // On récupère tout en parallèle pour gagner du temps
+            const [stocksRes, settingsRes] = await Promise.all([
+                supabase.from('stocks').select('*'),
+                supabase.from('settings').select('*').eq('key', 'vacation_mode').single()
+            ]);
 
+            if (stocksRes.error) console.error("Erreur Stocks:", stocksRes.error);
+            const currentStocks = stocksRes.data;
+
+            // --- 3. GESTION DU MODE VACANCES ---
+            const vacationBtn = document.getElementById('vacation-toggle');
+            let isVacation = settingsRes.data ? settingsRes.data.value : false;
+            
+            updateVacationUI(isVacation, vacationBtn);
+
+            vacationBtn?.addEventListener('click', async () => {
+                isVacation = !isVacation;
+                
+                // On désactive le bouton pendant l'envoi
+                if(vacationBtn) vacationBtn.style.opacity = "0.5";
+
+                const { error } = await supabase
+                    .from('settings')
+                    .upsert({ key: 'vacation_mode', value: isVacation });
+
+                if (!error) {
+                    updateVacationUI(isVacation, vacationBtn);
+                } else {
+                    alert("Erreur lors du changement de mode");
+                }
+                if(vacationBtn) vacationBtn.style.opacity = "1";
+            });
+
+            // --- 4. GESTION DES TOGGLES INDIVIDUELS ---
             const toggles = document.querySelectorAll('.stock-toggle');
 
             toggles.forEach((toggle: HTMLInputElement) => {
-                // ON RÉCUPÈRE L'ID (ex: banh-cuon)
                 const productId = toggle.id; 
                 
-                // On cherche si ce produit est dans la table Supabase
+                // On cherche l'état dans la base
                 const state = currentStocks?.find(s => s.product_slug === productId);
                 
-                // Application de l'état (Si trouvé on prend sa valeur, sinon TRUE)
+                // Application de l'état (par défaut TRUE si pas trouvé)
                 toggle.checked = state ? state.en_stock : true;
                 updateLabel(toggle);
 
-                // 3. Ecouteur de changement
+                // Écouteur de changement pour chaque produit/ingrédient
                 toggle.addEventListener('change', async (e) => {
                     const target = e.currentTarget as HTMLInputElement;
                     const currentId = target.id;
@@ -151,7 +186,6 @@ const sortedIngredients = Array.from(allIngredients).sort();
 
                     updateLabel(target);
 
-                    // ENVOI À SUPABASE
                     const { error: upsertError } = await supabase
                         .from('stocks')
                         .upsert({ 
@@ -170,6 +204,19 @@ const sortedIngredients = Array.from(allIngredients).sort();
             });
         }
 
+        // --- FONCTIONS UTILITAIRES ---
+
+        function updateVacationUI(status, btn) {
+            if (!btn) return;
+            if (status) {
+                btn.textContent = "☀️ Mode Vacances : ACTIF";
+                btn.className = "px-6 py-2 rounded-full font-black uppercase text-[10px] tracking-widest transition-all border-2 shadow-lg active:scale-95 bg-cat-pine text-white border-cat-pine";
+            } else {
+                btn.textContent = "🏠 Boutique : OUVERTE";
+                btn.className = "px-6 py-2 rounded-full font-black uppercase text-[10px] tracking-widest transition-all border-2 shadow-lg active:scale-95 bg-white text-cat-pine border-cat-pine";
+            }
+        }
+
         function updateLabel(el: HTMLInputElement) {
             const label = el.parentElement?.querySelector('.status-label');
             if (label) {
@@ -179,6 +226,7 @@ const sortedIngredients = Array.from(allIngredients).sort();
             }
         }
 
+        // Lancement au chargement du DOM
         document.addEventListener('DOMContentLoaded', initStock);
     </script>
 </Layout>

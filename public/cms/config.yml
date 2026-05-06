@@ -20,6 +20,7 @@ collections:
         widget: "select"
         options: ["Soupes", "Plats", "Desserts", "Hors d'œuvres"]
       - { label: "À commander 24h avance ?", name: "preorder", widget: "boolean", default: false, required: false }
+      - { label: "Best Seller ?", name: "is_bestseller", widget: "boolean", default: false, required: false }
       - { label: "Piment?", name: "hasSpice", widget: "boolean", default: false, required: false }
       - { label: "Description", name: "description", widget: "text" }
       - { label: "Image du plat", name: "image", widget: "image" }

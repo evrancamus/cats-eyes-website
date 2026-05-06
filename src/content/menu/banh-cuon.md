@@ -3,6 +3,7 @@ title: Bánh Cuon
 price: "10"
 category: Plats
 preorder: true
+is_bestseller: true
 hasSpice: true
 description: >-
   Un véritable classique de la gastronomie vietnamienne, revisité avec toute la

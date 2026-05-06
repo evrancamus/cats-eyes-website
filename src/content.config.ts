@@ -9,6 +9,7 @@ const menu = defineCollection({
         category: z.enum(["Soupes", "Plats", "Desserts", "Hors d'œuvres"]),
         description: z.string(),
         image: z.string(),
+        is_bestseller: z.boolean().optional(),
         hasSpice: z.boolean().optional().default(false),
         allergens: z.array(z.string()).optional().default([]),
         
