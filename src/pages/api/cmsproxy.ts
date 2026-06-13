@@ -1,15 +1,18 @@
 import type { APIRoute } from 'astro';
 
 export const ALL: APIRoute = async ({ request }) => {
-  // 1. ICI : Tu peux vérifier si l'utilisateur est bien connecté à Supabase pour bloquer les intrus
-  
   const url = new URL(request.url);
-  const path = url.pathname.replace('/api/cmsproxy', '');
   
-  // L'URL de l'API GitHub correspondante
-  const githubUrl = `https://api.github.com/repos/evrancamus/cats-eyes-website${path}`;
+  // Decap CMS va chercher à joindre /api/v1/... au lieu de l'API GitHub brute
+  let githubPath = url.pathname.replace('/api/cmsproxy', '');
+  if (githubPath.startsWith('/api/v1')) {
+    githubPath = githubPath.replace('/api/v1', '');
+  }
+  
+  // Reconstitution de l'adresse GitHub réelle
+  const githubUrl = `https://api.github.com/repos/evrancamus/cats-eyes-website${githubPath}${url.search}`;
 
-  // On relaie la demande à GitHub en injectant ton Token secret de manière sécurisée (côté serveur)
+  // Relais de la requête avec ton Token secret (sécurisé côté serveur)
   const response = await fetch(githubUrl, {
     method: request.method,
     headers: {
@@ -17,11 +20,16 @@ export const ALL: APIRoute = async ({ request }) => {
       'Accept': 'application/vnd.github.v3+json',
       'Content-Type': request.headers.get('Content-Type') || 'application/json',
     },
-    body: request.method !== 'GET' ? await request.text() : undefined
+    body: request.method !== 'GET' && request.method !== 'HEAD' ? await request.text() : undefined
   });
 
-  return new Response(await response.text(), {
+  // On renvoie la réponse de GitHub à Decap CMS
+  const data = await response.text();
+  return new Response(data, {
     status: response.status,
-    headers: { 'Content-Type': 'application/json' }
+    headers: { 
+      'Content-Type': 'application/json',
+      'Access-Control-Allow-Origin': '*' // Autorise l'accès multi-appareils
+    }
   });
 };
