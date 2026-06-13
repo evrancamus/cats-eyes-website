@@ -1,6 +1,8 @@
-local_backend: true
+local_backend:
+  url: https://catseyes-orleans.fr/api/cmsproxy
 backend:
-  name: git-gateway
+  name: github
+  repo: evrancamus/cats-eyes-website
   branch: main
 
 media_folder: "public/images/menu"
