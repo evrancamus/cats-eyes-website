@@ -8,6 +8,9 @@ const { title } = Astro.props;
 		<link rel="icon" type="image/svg+xml" href="/favicon.png" />
 		<meta name="viewport" content="width=device-width" />
 		<title>{title} | Cat's Eyes Orléans</title>
+		
+		{/* 🔐 AJOUT ICI : Le widget Netlify Identity pour intercepter le jeton d'invitation */}
+		<script src="https://identity.netlify.com/v1/netlify-identity-widget.js" is:inline></script>
 	</head>
 	<body class="bg-cat-wood text-cat-pine font-sans antialiased">
 		<slot />
