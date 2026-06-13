@@ -8,25 +8,28 @@
 <body>
   <div id="nc-root"></div>
 
-  <script src="https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js"></script>
+  <script src="https://unpkg.com/netlify-cms-core@^2.0.0/dist/netlify-cms-core.js"></script>
 
   <script>
-    // On clone le comportement de GitHub mais sous notre propre nom sans login
     const GitHubBackend = window.CMS.getBackend('github');
     
     class SupabaseGateBackend extends GitHubBackend.implementation {
       constructor(config, options) {
         super(config, options);
       }
-      // On court-circuite la fonction d'authentification pour dire au CMS : "C'est bon, on est déjà connectés !"
       isConfirmingEmail() { return false; }
       authenticate() { return Promise.resolve({ token: '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' }); }
       logout() { return null; }
       getToken() { return Promise.resolve('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'); }
     }
 
-    // On l'enregistre dans le moteur Decap
+    // On l'enregistre dans le moteur
     window.CMS.registerBackend('supabase-gate', SupabaseGateBackend);
+  </script>
+
+  <script>
+    // Force l'initialisation avec le fichier de configuration existant
+    initCMS();
   </script>
 </body>
 </html>
