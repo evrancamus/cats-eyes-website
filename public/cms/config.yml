@@ -2,6 +2,7 @@ local_backend: true
 backend:
   name: git-gateway
   branch: main
+  repo: evrancamus/cats-eyes-website
   login: false
 
 media_folder: "public/images/menu"
