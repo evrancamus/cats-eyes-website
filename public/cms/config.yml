@@ -1,9 +1,7 @@
 local_backend: true
 backend:
-  name: github
-  repo: evrancamus/cats-eyes-website
+  name: git-gateway
   branch: main
-  auth_type: implicit
 
 media_folder: "public/images/menu"
 public_folder: "/images/menu"

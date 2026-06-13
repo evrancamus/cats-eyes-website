@@ -6,38 +6,6 @@
   <title>Cat's Eyes - Gestion du Menu</title>
 </head>
 <body>
-  <!-- Conteneur requis pour Decap CMS -->
-  <div id="nc-root"></div>
-
-  <!-- 1. Script officiel de Decap CMS -->
   <script src="https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js"></script>
-
-  <!-- 2. Le script magique d'interception du Token -->
-  <script>
-    // Si on est sur le vrai serveur en production (pas en localhost)
-    if (window.location.hostname !== 'localhost') {
-      
-      // On s'enregistre sur le hook juste avant que le CMS ne tente de s'authentifier
-      window.CMS.registerEventListener({
-        name: 'preLogin',
-        handler: () => {
-          // On force l'injection du token GitHub directement dans la session de l'application
-          localStorage.setItem('cms.token', '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');
-          
-          // On recharge brièvement la page une seule fois si le CMS refuse le boot initial
-          if (!localStorage.getItem('cms_forced')) {
-            localStorage.setItem('cms_forced', 'true');
-            window.location.reload();
-          }
-        }
-      });
-
-      // Sécurité additionnelle : injection directe à la racine du LocalStorage
-      localStorage.setItem('cms.token', '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');
-    } else {
-      // Nettoyage du marqueur en local pour ne pas perturber ton proxy
-      localStorage.removeItem('cms_forced');
-    }
-  </script>
 </body>
 </html>
