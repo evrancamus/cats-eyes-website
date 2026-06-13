@@ -5,19 +5,24 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Cat's Eyes - Gestion du Menu</title>
 
-  <!-- Script d'auto-connexion pour la production -->
   <script>
-    if (window.location.hostname !== 'localhost') {
-      // On injecte ton vrai token là où le backend "github" de Decap va le chercher
-      localStorage.setItem('cms.token', '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');
+    function injectToken() {
+      if (window.location.hostname !== 'localhost') {
+        // On injecte le token de manière répétée pour devancer le chargement de Decap
+        localStorage.setItem('cms.token', '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');
+      }
     }
+
+    // Extraction immédiate
+    injectToken();
+
+    // On le ré-injecte toutes les 100ms pendant 2 secondes pour forcer Decap à le voir au boot
+    const interval = setInterval(injectToken, 100);
+    setTimeout(() => clearInterval(interval), 2000);
   </script>
 </head>
 <body>
-  <!-- Conteneur principal pour Decap CMS -->
   <div id="nc-root"></div>
-
-  <!-- Script officiel de Decap CMS -->
   <script src="https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js"></script>
 </body>
 </html>
