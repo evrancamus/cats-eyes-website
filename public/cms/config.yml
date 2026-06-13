@@ -1,5 +1,5 @@
 backend:
-  name: github
+  name: supabase-gate
   repo: evrancamus/cats-eyes-website
   branch: main
   api_root: https://catseyes-orleans.fr/api/cmsproxy
