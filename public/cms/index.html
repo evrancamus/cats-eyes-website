@@ -8,28 +8,103 @@
 <body>
   <div id="nc-root"></div>
 
-  <script src="https://unpkg.com/netlify-cms-core@^2.0.0/dist/netlify-cms-core.js"></script>
+  <script src="https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js"></script>
 
   <script>
-    const GitHubBackend = window.CMS.getBackend('github');
-    
-    class SupabaseGateBackend extends GitHubBackend.implementation {
-      constructor(config, options) {
-        super(config, options);
+    window.CMS.init({
+      config: {
+        // En local, on laisse le proxy s'en occuper, en ligne on passe par notre route sécurisée
+        backend: window.location.hostname === 'localhost' 
+          ? { name: 'git-gateway', branch: 'main' }
+          : {
+              name: 'github',
+              repo: 'evrancamus/cats-eyes-website',
+              branch: 'main',
+              // 🤫 C'est ICI qu'on injecte la clé ! Decap s'ouvre direct sans bouton login !
+              token: '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'
+            },
+        local_backend: true,
+        media_folder: "public/images/menu",
+        public_folder: "/images/menu",
+        collections: [
+          {
+            name: "menu",
+            label: "La Carte (Plats)",
+            folder: "src/content/menu",
+            create: true,
+            slug: "{{slug}}",
+            fields: [
+              { label: "Nom du plat", name: "title", widget: "string" },
+              { label: "Prix de base", name: "price", widget: "number", value_type: "float" },
+              { label: "Catégorie", name: "category", widget: "select", options: ["Soupes", "Plats", "Desserts", "Hors d'œuvres"] },
+              { label: "À commander 24h avance ?", name: "preorder", widget: "boolean", default: false, required: false },
+              { label: "Best Seller ?", name: "is_bestseller", widget: "boolean", default: false, required: false },
+              { label: "Piment?", name: "hasSpice", widget: "boolean", default: false, required: false },
+              { label: "Description", name: "description", widget: "text" },
+              { label: "Image du plat", name: "image", widget: "image" },
+              {
+                label: "Allergènes présents",
+                name: "allergens",
+                widget: "select",
+                multiple: true,
+                required: false,
+                options: [
+                  { label: "Gluten", value: "gluten" },
+                  { label: "Crustacés", value: "crustaces" },
+                  { label: "Coriandre", value: "coriandre" },
+                  { label: "Œufs", value: "oeufs" },
+                  { label: "Poissons", value: "poissons" },
+                  { label: "Arachides", value: "arachides" },
+                  { label: "Soja", value: "soja" },
+                  { label: "Lait", value: "lait" },
+                  { label: "Fruits à coque", value: "fruits_coque" },
+                  { label: "Céleri", value: "celeri" },
+                  { label: "Moutarde", value: "moutarde" },
+                  { label: "Graines de sésame", value: "sesame" }
+                ]
+              },
+              {
+                label: "Groupes d'options (Choix inclus)",
+                name: "variant_groups",
+                widget: "list",
+                summary: "{{fields.group_name}}",
+                fields: [
+                  { label: "Nom du groupe", name: "group_name", widget: "string", hint: "Ex: Protéines, Type de Nouilles..." },
+                  {
+                    label: "Options",
+                    name: "options",
+                    widget: "list",
+                    summary: "{{fields.name}}",
+                    fields: [
+                      { label: "Nom de l'option", name: "name", widget: "string" },
+                      { label: "Photo spécifique (Optionnel)", name: "image", widget: "image", required: false }
+                    ]
+                  }
+                ]
+              },
+              {
+                label: "Suppléments / Extras (Payants)",
+                name: "extras",
+                widget: "list",
+                summary: "{{fields.name}} (+{{fields.price}}€)",
+                required: false,
+                fields: [
+                  { label: "Nom du supplément", name: "name", widget: "string", hint: "Ex: Double Bœuf, Avocat..." },
+                  { label: "Prix additionnel", name: "price", widget: "number", value_type: "float", default: 1 }
+                ]
+              },
+              {
+                label: "Tags",
+                name: "tags",
+                widget: "list",
+                default: ["Quotidien"],
+                hint: "Ajoutez 'Vegan', 'Végétarien', 'Ponctuel', etc."
+              }
+            ]
+          }
+        ]
       }
-      isConfirmingEmail() { return false; }
-      authenticate() { return Promise.resolve({ token: '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' }); }
-      logout() { return null; }
-      getToken() { return Promise.resolve('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'); }
-    }
-
-    // On l'enregistre dans le moteur
-    window.CMS.registerBackend('supabase-gate', SupabaseGateBackend);
-  </script>
-
-  <script>
-    // Force l'initialisation avec le fichier de configuration existant
-    initCMS();
+    });
   </script>
 </body>
 </html>
