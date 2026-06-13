@@ -8,20 +8,16 @@
   <!-- Script d'auto-connexion pour la production -->
   <script>
     if (window.location.hostname !== 'localhost') {
-      localStorage.setItem('gotrue.user', JSON.stringify({
-        token: {
-          access_token: "PASSE",
-          expires_at: Date.now() + 3600000
-        }
-      }));
+      // On injecte ton vrai token là où le backend "github" de Decap va le chercher
+      localStorage.setItem('cms.token', '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');
     }
   </script>
 </head>
 <body>
-  <!-- Conteneur principal requis par certaines versions de Netlify/Decap CMS -->
+  <!-- Conteneur principal pour Decap CMS -->
   <div id="nc-root"></div>
 
-  <!-- Script officiel de Decap CMS placé en bas du body pour attendre que le HTML soit chargé -->
+  <!-- Script officiel de Decap CMS -->
   <script src="https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js"></script>
 </body>
 </html>
