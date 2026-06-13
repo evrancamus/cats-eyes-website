@@ -1,7 +1,8 @@
+local_backend: true
 backend:
   name: git-gateway
-  repo: evrancamus/cats-eyes-website
   branch: main
+  repo: evrancamus/cats-eyes-website
 
 media_folder: "public/images/menu"
 public_folder: "/images/menu"
@@ -24,7 +25,6 @@ collections:
       - { label: "Piment?", name: "hasSpice", widget: "boolean", default: false, required: false }
       - { label: "Description", name: "description", widget: "text" }
       - { label: "Image du plat", name: "image", widget: "image" }
-      
       - label: "Allergènes présents"
         name: "allergens"
         widget: "select"
@@ -43,8 +43,6 @@ collections:
           - { label: "Céleri", value: "celeri" }
           - { label: "Moutarde", value: "moutarde" }
           - { label: "Graines de sésame", value: "sesame" }
-
-      # --- NOUVELLE STRUCTURE DE VARIANTES ---
       - label: "Groupes d'options (Choix inclus)"
         name: "variant_groups"
         widget: "list"
@@ -58,8 +56,6 @@ collections:
             fields:
               - { label: "Nom de l'option", name: "name", widget: "string" }
               - { label: "Photo spécifique (Optionnel)", name: "image", widget: "image", required: false }
-
-      # --- NOUVELLE SECTION SUPPLÉMENTS (Ajoute un coût) ---
       - label: "Suppléments / Extras (Payants)"
         name: "extras"
         widget: "list"
@@ -68,7 +64,6 @@ collections:
         fields:
           - { label: "Nom du supplément", name: "name", widget: "string", hint: "Ex: Double Bœuf, Avocat..." }
           - { label: "Prix additionnel", name: "price", widget: "number", value_type: "float", default: 1 }
-
       - label: "Tags"
         name: "tags"
         widget: "list"
