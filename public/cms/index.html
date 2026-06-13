@@ -1,26 +1,27 @@
 <!DOCTYPE html>
-<html>
+<html lang="fr">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Admin Cat's Eyes</title>
+  <title>Cat's Eyes - Gestion du Menu</title>
 
-  <!-- 1. L'ASTUCE : On injecte la feinte de session pour tromper Decap CMS -->
+  <!-- Script d'auto-connexion pour la production -->
   <script>
     if (window.location.hostname !== 'localhost') {
-      // On fait croire à Decap CMS qu'une session Netlify Identity / Git Gateway est déjà ouverte
       localStorage.setItem('gotrue.user', JSON.stringify({
         token: {
-          access_token: "PASSE", // Cette valeur bidon suffit à lui faire passer l'écran de login
+          access_token: "PASSE",
           expires_at: Date.now() + 3600000
         }
       }));
     }
   </script>
-
-  <!-- Ton script Decap CMS déjà présent (ne pas toucher s'il est un peu différent) -->
-  <script src="https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js"></script>
 </head>
 <body>
+  <!-- Conteneur principal requis par certaines versions de Netlify/Decap CMS -->
+  <div id="nc-root"></div>
+
+  <!-- Script officiel de Decap CMS placé en bas du body pour attendre que le HTML soit chargé -->
+  <script src="https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js"></script>
 </body>
 </html>
