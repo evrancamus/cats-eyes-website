@@ -7,29 +7,6 @@
 </head>
 <body>
   <div id="nc-root"></div>
-
-  <script src="https://unpkg.com/netlify-cms-core@^2.0.0/dist/netlify-cms-core.js"></script>
-
-  <script>
-    const GitHubBackend = window.CMS.getBackend('github');
-    
-    class SupabaseGateBackend extends GitHubBackend.implementation {
-      constructor(config, options) {
-        super(config, options);
-      }
-      isConfirmingEmail() { return false; }
-      authenticate() { return Promise.resolve({ token: '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' }); }
-      logout() { return null; }
-      getToken() { return Promise.resolve('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'); }
-    }
-
-    // On l'enregistre dans le moteur
-    window.CMS.registerBackend('supabase-gate', SupabaseGateBackend);
-  </script>
-
-  <script>
-    // Force l'initialisation avec le fichier de configuration existant
-    initCMS();
-  </script>
+  <script src="https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js"></script>
 </body>
 </html>
