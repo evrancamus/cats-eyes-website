@@ -1,6 +1,6 @@
 local_backend: true
 backend:
-  name: github
+  name: git-gateway
   branch: main
   login: false
 
