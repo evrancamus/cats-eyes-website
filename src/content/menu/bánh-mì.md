@@ -1,8 +1,9 @@
 ---
 title: Bánh Mì
-price: "15"
+price: 10
 category: Plats
 preorder: true
+is_bestseller: true
 description: >-
   L'équilibre parfait entre l'Asie et la France !
 

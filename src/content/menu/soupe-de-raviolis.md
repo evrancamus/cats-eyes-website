@@ -1,6 +1,6 @@
 ---
 title: Soupe de Raviolis
-price: 15
+price: 16
 category: Soupes
 preorder: false
 description: >-

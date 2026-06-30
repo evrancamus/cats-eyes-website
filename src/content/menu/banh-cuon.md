@@ -1,6 +1,6 @@
 ---
 title: Bánh Cuon
-price: "10"
+price: 13
 category: Plats
 preorder: true
 is_bestseller: true
