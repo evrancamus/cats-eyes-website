@@ -802,6 +802,7 @@ const slides = [
 						const isEpuise = slugsEpuisesSet.has(product.id.toLowerCase());
 						const isPreorder = product.data.preorder === true;
 						const productIdClean = typeof product.id === "string" ? product.id.replace(/[^a-zA-Z0-9]/g, "") : "";
+						const productImagePath = typeof product.data.image === "string" ? product.data.image : "";
 
 						return (
 							<div 
@@ -813,8 +814,10 @@ const slides = [
 								<div class="aspect-[4/3] overflow-hidden relative border-b-2 border-cat-pine">
 									<img 
 										id={`img-${productIdClean}`}
-										src={product.data.image} 
+										src={productImagePath} 
 										alt={product.data.title} 
+										loading="lazy"
+										onerror="this.onerror=null; if(!this.src.includes('.jpg')) { this.src = this.src.replace('.jpeg', '.jpg'); }"
 										class={`product-img w-full h-full object-cover group-hover:scale-105 transition-all duration-500 ${isEpuise ? 'grayscale' : ''}`} 
 									/>
 									
