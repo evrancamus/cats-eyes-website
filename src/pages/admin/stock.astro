@@ -74,10 +74,11 @@ const sortedIngredients = Array.from(allIngredients).sort();
                         </div>
 
                         <label class="relative inline-flex items-center cursor-pointer">
+
                             <input 
                                 type="checkbox" 
                                 class="sr-only peer stock-toggle" 
-                                id={item.id} 
+                                id={item.id.toLowerCase()} 
                             />
                             <div class="w-14 h-7 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-cat-teal"></div>
                             
@@ -181,7 +182,7 @@ const sortedIngredients = Array.from(allIngredients).sort();
                 // Écouteur de changement pour chaque produit/ingrédient
                 toggle.addEventListener('change', async (e) => {
                     const target = e.currentTarget as HTMLInputElement;
-                    const currentId = target.id;
+                    const currentId = target.id.trim().toLowerCase(); // On force les minuscules ici aussi
                     const newStatus = target.checked;
 
                     updateLabel(target);

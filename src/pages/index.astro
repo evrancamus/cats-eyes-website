@@ -799,7 +799,7 @@ const slides = [
 
 				<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10" id="product-grid">
 					{allProducts && allProducts.map((product) => {
-						const isEpuise = slugsEpuisesSet.has(product.id);
+						const isEpuise = slugsEpuisesSet.has(product.id.toLowerCase());
 						const isPreorder = product.data.preorder === true;
 						const productIdClean = typeof product.id === "string" ? product.id.replace(/[^a-zA-Z0-9]/g, "") : "";
 
@@ -818,9 +818,9 @@ const slides = [
 										class={`product-img w-full h-full object-cover group-hover:scale-105 transition-all duration-500 ${isEpuise ? 'grayscale' : ''}`} 
 									/>
 									
-									{/* Badge "Victime de son succès" */}
-									<div class={`victime-badge absolute inset-0 bg-cat-pine/20 flex items-center justify-center z-20 ${isEpuise ? '' : 'hidden'}`}>
-										<span class="bg-white text-cat-pine px-4 py-2 rounded-full font-black uppercase text-[10px] tracking-widest shadow-xl border-2 border-cat-pine rotate-[-5deg]">
+									<!-- Badge "Victime de son succès" -->
+									<div class={`victime-badge absolute inset-0 bg-cat-pine/20 flex items-center justify-center z-30 ${isEpuise ? '' : 'hidden'}`} style="pointer-events: none;">
+										<span class="bg-white text-cat-pine px-4 py-2 rounded-full font-black uppercase text-[10px] tracking-widest shadow-xl border-2 border-cat-pine block transform rotate-[-5deg] whitespace-nowrap">
 											Victime de son succès
 										</span>
 									</div>
