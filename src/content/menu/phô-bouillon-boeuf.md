@@ -1,6 +1,6 @@
 ---
 title: Phô (Bouillon Boeuf)
-price: 15
+price: 16
 category: Soupes
 preorder: false
 is_bestseller: true
