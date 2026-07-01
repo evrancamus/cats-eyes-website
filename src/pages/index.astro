@@ -1,57 +1,36 @@
 ---
-export const prerender = false;
-
 import Layout from '../layouts/Layout.astro';
 import { getCollection } from 'astro:content';
 import { supabase } from '../lib/supabase';
 
-// 1. RÉCUPÉRATION DES DONNÉES EN PARALLÈLE (Plus rapide)
-const [allProductsRaw, settingsRes, stocksRes] = await Promise.all([
+// 1. RÉCUPÉRATION DES DONNÉES EN PARALLÈLE (Vercel va compiler le menu et l'état des vacances sans bloquer)
+const [allProductsRaw, settingsRes] = await Promise.all([
     getCollection('menu'),
-    supabase.from('settings').select('value').eq('key', 'vacation_mode').single(),
-    supabase.from('stocks').select('product_slug, en_stock')
+    supabase.from('settings').select('value').eq('key', 'vacation_mode').single()
 ]);
 
 // 2. GESTION DU MODE VACANCES
 const isVacation = settingsRes.data?.value || false;
 
-// 3. GESTION DES STOCKS (Plats et Ingrédients)
-const stocksData = stocksRes.data || [];
-
-// Tableau des IDs de plats épuisés (ex: ["banh-cuon"])
-const slugsEpuises = stocksData
-    .filter(s => s.en_stock === false && !s.product_slug.startsWith('global:'))
-    .map(s => s.product_slug);
-
-// Tableau des ingrédients globaux épuisés (nettoyés pour la comparaison)
-const ingredientsEpuises = stocksData
-    .filter(s => s.en_stock === false && s.product_slug.startsWith('global:'))
-    .map(s => s.product_slug.replace('global:', ''));
-
-// 4. TRI DES PRODUITS (Best Sellers en premier)
+// 3. TRI DES PRODUITS (Best Sellers en premier)
 const allProducts = allProductsRaw.sort((a, b) => {
     const aBest = a.data.is_bestseller || false;
     const bBest = b.data.is_bestseller || false;
 
     if (aBest && !bBest) return -1;
     if (!aBest && bBest) return 1;
-    return 0; // On garde l'ordre original pour le reste
+    return 0; 
 });
 
-// 5. GÉNÉRATION DYNAMIQUE DES CATÉGORIES
-// On récupère toutes les catégories présentes dans les fichiers markdown/json
+// 4. GÉNÉRATION DYNAMIQUE DES CATÉGORIES
 const dynamicCategories = [...new Set(allProducts.map(p => p.data.category))];
-
-// On définit l'ordre souhaité (optionnel) et on filtre pour ne garder que ce qui existe
 const order = ["Soupes", "Plats", "Desserts", "Hors d'œuvres"];
 const availableCategories = order.filter(cat => dynamicCategories.includes(cat));
-
-// On ajoute "Tout" au début
 const categories = ["Tout", ...availableCategories];
 
 const restaurantName = "Cat's Eyes";
 
-// 6. CONFIGURATION GÉNÉRALE
+// 5. CONFIGURATION GÉNÉRALE
 const slides = [
     {
         image: "/images/concept-1.webp",
@@ -75,7 +54,7 @@ const slides = [
         subtitle: "L'ADN Cat's Eyes",
         icon: "/icons/health.png",
         color: "#388fa2",
-        description: "Nous appliquons une rigueur intarissable concernant la propreté de nos espaces d'accueil.<br><br>Chacune de nos présentations est fignolée avec la plus grande attention !"
+        description: "Nous appliquons une rigueur intarissable concernant la propreté de nos espaces d'accueil.<br><br>Chacune de nos présentations fignolée avec la plus grande attention !"
     },
     {
         image: "/images/concept-3.webp",
@@ -797,7 +776,7 @@ const slides = [
 
 				<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10" id="product-grid">
 					{allProducts && allProducts.map((product) => {
-						const isEpuise = Array.isArray(slugsEpuises) && slugsEpuises.includes(product.id);
+						const isEpuise = false;
 						const isPreorder = product.data.preorder === true;
 						const productIdClean = typeof product.id === "string" ? product.id.replace(/[^a-zA-Z0-9]/g, "") : "";
 
@@ -869,8 +848,7 @@ const slides = [
 												{Array.isArray(group.options) && group.options.map((option) => (
 													<button 
 														type="button"
-														class={`variant-btn px-4 py-2 rounded-xl border-2 border-cat-pine text-[10px] font-black uppercase tracking-tighter bg-white text-cat-pine ${Array.isArray(ingredientsEpuises) && ingredientsEpuises.includes(option.name.toLowerCase()) ? 'opacity-30 line-through pointer-events-none' : ''}`}
-														data-target={`img-${productIdClean}`}
+														class={`variant-btn px-4 py-2 rounded-xl border-2 border-cat-pine text-[10px] font-black uppercase tracking-tighter bg-white text-cat-pine`}														data-target={`img-${productIdClean}`}
 														data-image={option.image || product.data.image}
 													>
 														{option.name}
@@ -888,7 +866,7 @@ const slides = [
 												{product.data.extras.map((extra) => (
 													<button 
 														type="button"
-														class={`extra-btn px-3 py-1.5 rounded-xl border-2 border-dashed border-cat-pine/20 text-[10px] font-bold text-cat-pine bg-white flex items-center gap-1.5 ${Array.isArray(ingredientsEpuises) && ingredientsEpuises.includes(extra.name.toLowerCase()) ? 'opacity-30 line-through pointer-events-none' : ''}`}
+														class={`extra-btn px-3 py-1.5 rounded-xl border-2 border-dashed border-cat-pine/20 text-[10px] font-bold text-cat-pine bg-white flex items-center gap-1.5`}
 														data-extra-name={extra.name}
 														data-extra-price={extra.price}
 													>
@@ -1106,6 +1084,52 @@ const slides = [
 		import { supabase } from '../lib/supabase';
 
 		document.addEventListener('DOMContentLoaded', () => {
+
+			// --- FONCTION SYNCHRO STOCKS LIVE (À ajouter au tout début de DOMContentLoaded) ---
+			const slugify = (text) => text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "");
+
+			async function applyLiveStocks() {
+				const { data: stocksData } = await supabase.from('stocks').select('product_slug, en_stock');
+				if (!stocksData) return;
+
+				// 1. Traitement des Plats épuisés
+				const platsEpuises = stocksData
+					.filter(s => s.en_stock === false && !s.product_slug.startsWith('global:'))
+					.map(s => s.product_slug);
+
+				// 2. Traitement des Ingrédients Globaux épuisés
+				const ingredientsEpuises = stocksData
+					.filter(s => s.en_stock === false && s.product_slug.startsWith('global:'))
+					.map(s => s.product_slug.replace('global:', ''));
+
+				// --- ACTION A : MASQUER EN DIRECT LES PLATS ÉPUISÉS ---
+				const cards = document.querySelectorAll('.product-card');
+				cards.forEach(card => {
+					const id = card.getAttribute('data-product-id');
+					if (platsEpuises.includes(id)) {
+						card.classList.add('opacity-50', 'pointer-events-none');
+						card.querySelector('.victime-badge')?.classList.remove('hidden');
+						card.querySelector('.status-indisponible')?.classList.remove('hidden');
+						card.querySelector('.add-to-cart-btn')?.classList.add('hidden');
+					}
+				});
+
+				// --- ACTION B : MASQUER EN DIRECT LES OPTIONS / EXTRAS ÉPUISÉS ---
+				const variantAndExtraBtns = document.querySelectorAll('.variant-btn, .extra-btn');
+				variantAndExtraBtns.forEach(btn => {
+					// On récupère le nom brut du bouton (ex: "Menthe fraîche")
+					const name = btn.innerText.split('+')[0].trim(); 
+					const cleanSlug = slugify(name);
+
+					if (ingredientsEpuises.includes(cleanSlug)) {
+						btn.classList.add('opacity-30', 'line-through', 'pointer-events-none');
+					}
+				});
+			}
+
+			// On lance l'exécution immédiate
+			applyLiveStocks();
+			
 			// --- 1. ÉTAT GLOBAL & OUTILS ---
 			let cart = [];
 			const targetPhone = "33631541175";
