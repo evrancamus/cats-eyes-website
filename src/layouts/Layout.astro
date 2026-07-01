@@ -5,9 +5,15 @@ const { title } = Astro.props;
 <html lang="fr" class="scroll-smooth">
 	<head>
 		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.png" />
+		<link rel="icon" type="image/png" href="/favicon.png" />
 		<meta name="viewport" content="width=device-width" />
-		<title>{title} | Cat's Eyes Orléans</title>
+		
+		<!-- Le titre s'adaptera dynamiquement -->
+		<title>{title}</title>
+
+		<!-- AJOUT DE LA DESCRIPTION POUR GOOGLE -->
+		<meta name="description" content="Découvrez nos jus et notre cantine asiatique authentique et unique au cœur d'Orléans. Profitez de notre service traiteur sur mesure pour vos événements ou participez à nos ateliers culinaires." />
+			<meta name="google-site-verification" content="qafMpJW-E_Rz5GgAj1U66tvoFIlYXLgAJCwYLsrK5lw" />
 	</head>
 	<body class="bg-cat-wood text-cat-pine font-sans antialiased">
 		<slot />

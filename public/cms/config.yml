@@ -1,7 +1,9 @@
 local_backend: true
 backend:
-  name: git-gateway
+  name: github
+  repo: evrancamus/cats-eyes-website
   branch: main
+  base_url: https://decap-cms-oauth-phi-eight.vercel.app
 
 media_folder: "public/images/menu"
 public_folder: "/images/menu"

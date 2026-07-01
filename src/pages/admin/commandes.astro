@@ -31,7 +31,7 @@ import Layout from '../../layouts/Layout.astro';
                 </a>
                 <div>
                     <h1 class="text-3xl font-black text-cat-pine italic leading-none">Commandes Live 🥢</h1>
-                    <p class="text-[10px] font-bold uppercase tracking-widest text-cat-pine/40 mt-1">Interface Isabelle</p>
+                    <p class="text-[10px] font-bold uppercase tracking-widest text-cat-pine/40 mt-1">Interface Live</p>
                 </div>
             </div>
 
@@ -174,7 +174,7 @@ import Layout from '../../layouts/Layout.astro';
                         <span class="text-[9px] font-bold opacity-30 italic">Reçue à ${dateCreation}</span>
                     </div>
                     <button 
-                        onclick="window.completeOrder('${order.id}', '${order.telephone}', ${order.items.length})"
+                        onclick="window.completeOrder('${order.id}', '${order.telephone}', ${order.total})"
                         class="w-full bg-cat-pine text-white py-5 rounded-[1.5rem] font-black text-xs uppercase tracking-[0.2em] hover:bg-cat-teal active:scale-95 transition-all shadow-xl shadow-cat-pine/20"
                     >
                         Encaisser & Créditer
@@ -278,21 +278,34 @@ import Layout from '../../layouts/Layout.astro';
             location.reload(); 
         };
 
-        window.completeOrder = async (orderId, phone, pointsToAdd) => {
-            if (!confirm(`Confirmer le paiement ?\n+${pointsToAdd} points pour le client.`)) return;
+        window.completeOrder = async (orderId, phone, orderAmount) => {
+            // Calcul des points : 1 point par tranche de 10€ (ex: 35€ -> 3 pts)
+            const pointsToAdd = Math.floor(orderAmount / 10);
+
+            if (!confirm(`Confirmer le paiement ?\nMontant : ${orderAmount}€\nPoints à créditer : +${pointsToAdd}`)) return;
             const card = document.getElementById(`order-${orderId}`);
             if (card) card.style.opacity = "0.3";
 
+            // 1. Marquer la commande comme payée
             await supabase.from('commandes').update({ statut: 'paye' }).eq('id', orderId);
 
+            // 2. Mise à jour des points du client
             const { data: profile } = await supabase.from('profils').select('points_fidelite').eq('telephone', phone).maybeSingle();
+            
             if (profile) {
-                await supabase.from('profils').update({ points_fidelite: profile.points_fidelite + pointsToAdd }).eq('telephone', phone);
+                // Si le client existe déjà
+                await supabase.from('profils')
+                    .update({ points_fidelite: profile.points_fidelite + pointsToAdd })
+                    .eq('telephone', phone);
             } else {
-                await supabase.from('profils').insert([{ telephone: phone, points_fidelite: pointsToAdd }]);
+                // Si c'est un nouveau client (on crée son profil avec ses premiers points)
+                await supabase.from('profils')
+                    .insert([{ telephone: phone, points_fidelite: pointsToAdd }]);
             }
             card?.remove();
-            if (document.getElementById('orders-grid')?.children.length === 0) document.getElementById('empty-state')?.classList.remove('hidden');
+            if (document.getElementById('orders-grid')?.children.length === 0) {
+                document.getElementById('empty-state')?.classList.remove('hidden');
+            }
         };
 
         // Action : Suppression RÉELLE dans Supabase

@@ -24,7 +24,7 @@ const slugsEpuises = stocksData
 // Tableau des ingrédients globaux épuisés (nettoyés pour la comparaison)
 const ingredientsEpuises = stocksData
     .filter(s => s.en_stock === false && s.product_slug.startsWith('global:'))
-    .map(s => s.product_slug.split(':')[1].replace(/-/g, ' ').toLowerCase());
+    .map(s => s.product_slug.replace('global:', ''));
 
 // 4. TRI DES PRODUITS (Best Sellers en premier)
 const allProducts = allProductsRaw.sort((a, b) => {
@@ -65,7 +65,7 @@ const slides = [
         subtitle: "L'ADN Cat's Eyes",
         icon: "/icons/healthy.png",
         color: "#126b13",
-        description: "Toutes nos recettes sont cuisinées minute, à partir d'ingrédients frais et de qualité.<br><br>Nos soupes et bouillons mijotent plus de 12h pour vous offrir une authenticité rare et une véritable expérience sensorielle !"
+        description: "Toutes nos recettes sont cuisinées minute, à partir d'ingrédients frais et de qualité.<br><br>Nos soupes et bouillons vous offrent une authenticité rare, chaque plat est un voyage"
     },
     {
         image: "/images/concept-4.webp",
@@ -97,12 +97,12 @@ const slides = [
         subtitle: "L'ADN Cat's Eyes",
         icon: "/icons/strategy.png",
         color: "#388fa2",
-        description: "Que c'est agréable de profiter d'une bonne partie d'échecs en se rafraîchissant d'un bon jus pressé minute... Ou une soupe... Ou les deux !<br> <br> Nos jeux sont en libre service."
+        description: "Une bonne partie d'échecs... un jus pressé... ou une soupe... Ou les deux"
     },
 ];
 ---
 
-<Layout title="Accueil">
+<Layout title="Cat's Eyes Orléans | Cantine Asiatique & Traiteur sur Mesure">
 	
 	<header class="bg-cat-yellow py-4 px-6 sticky top-0 z-50 shadow-md">
 		<div class="max-w-7xl mx-auto flex justify-between items-center">
@@ -120,7 +120,7 @@ const slides = [
 					<a href="#menu" class="hover:text-white hover:-translate-y-0.5 transition-all text-xs lg:text-sm">La Carte</a>
 					<a href="#jus" class="hover:text-white hover:-translate-y-0.5 transition-all text-xs lg:text-sm">Les Jus</a>
 					<a href="#traiteur" id="menu-link-traiteur" class="hover:text-white transition-colors">Traiteur</a>
-					<a href="#traiteur" id="menu-link-ateliers" class="hover:text-white transition-colors">Ateliers</a>
+					<a href="#ateliers" id="menu-link-ateliers" class="hover:text-white transition-colors">Ateliers</a>
 				</nav>
 
 				<div class="flex items-center gap-2 lg:gap-4">
@@ -186,30 +186,30 @@ const slides = [
 					<div class="max-w-3xl mx-auto w-full">
 						<p 
 							class="text-white text-xl md:text-4xl font-medium italic leading-tight 
-								px-8 py-6 -mt-24 mb-12 md:mt-20 md:mb-35
+								px-8 py-6 -mt-16 mb-22 md:mt-20 md:mb-35
 								bg-white/[0.09] backdrop-blur-[4px] rounded-2xl border border-white/10 shadow-2xl
 								animate-fade-in-up
 								hover:bg-white/[0.15] hover:scale-[1.02] hover:border-white/30 transition-all duration-500 cursor-default"
 							style="text-shadow: 0 2px 10px rgba(0,0,0,0.6), 0 0 20px rgba(0,0,0,0.3);"
 						>
-							"Cantine & Traiteur Asiatique Authentique au cœur d'Orléans."
+							Cantine & Traiteur Asiatique Authentique au cœur d'Orléans.
 						</p>
 												
-						<div class="flex flex-col sm:flex-row gap-4 justify-center items-center pb-8 md:pb-0 animate-fade-in-up-delayed">
+						<div class="flex flex-col sm:flex-row gap-9 md:gap-4 justify-center items-center pb-8 md:pb-0 -translate-y-5 md:translate-y-0 animate-fade-in-up-delayed">
 							
-							<a href="#menu" class="bg-cat-pine text-white w-full sm:w-auto px-10 py-4 rounded-full font-bold shadow-2xl 
+							<a href="#menu" class="bg-cat-pink text-white w-72 md:w-auto px-10 py-4 rounded-full font-bold shadow-2xl 
 								transition-all duration-300 transform
 								hover:scale-105 hover:shadow-cat-pine/20 hover:brightness-110
 								active:scale-95 text-base md:text-lg text-center border-2 border-transparent">
-								Je mange sur place ou à emporter
+								Je mange sur place<br class="md:hidden" /> ou à emporter
 							</a>
 							
-							<a href="#traiteur" class="backdrop-blur-md text-white border border-white/20 w-full sm:w-auto px-10 py-4 rounded-full font-bold shadow-2xl
+							<a href="#traiteur" class="backdrop-blur-md text-white border border-white/20 w-72 md:w-auto px-10 py-4 rounded-full font-bold shadow-2xl
 								transition-all duration-300 transform
 								hover:scale-105 hover:bg-cat-yellow hover:border-white/50
 								active:scale-95 text-base md:text-lg text-center">
 								Je prépare un événement
-							</a>
+							</a>y
 						</div>
 					</div>
 				</div>
@@ -256,8 +256,18 @@ const slides = [
 	}
 	</style>
 	
-	<section id="traiteur" class="w-full bg-cat-wood py-20 px-6 overflow-hidden">
+	<section id="traiteur" class="w-full bg-cat-pine py-20 px-6 overflow-hidden">
 		<div class="max-w-7xl mx-auto flex flex-col lg:flex-row gap-12 items-start">
+
+			
+			<div class="w-full lg:hidden flex flex-wrap items-center gap-3 mb-2">
+				<button class="tab-traiteur-btn px-6 py-2 rounded-full font-black text-[10px] uppercase tracking-widest transition-all duration-500 border-2 border-white/10 shadow-sm bg-cat-yellow text-cat-pine">
+					Traiteur & Evénementiel
+				</button>
+				<button class="tab-cours-btn px-6 py-2 rounded-full font-black text-[10px] uppercase tracking-widest transition-all duration-500 border-2 border-white/10 shadow-sm bg-transparent text-white/40">
+					Ateliers Culinaires
+				</button>
+			</div>
 			
 			<div class="w-full lg:w-3/5 relative group">
 				
@@ -300,29 +310,29 @@ const slides = [
 				</div>
 			</div>
 
-			<div class="w-full lg:w-2/5 lg:sticky lg:top-32">
-				
-				<div class="flex flex-wrap items-center gap-3 mb-10">
-					<button id="tab-traiteur" class="px-6 py-2 rounded-full font-black text-[10px] uppercase tracking-widest transition-all duration-500 border-2 border-cat-pine/10 shadow-sm bg-cat-yellow text-cat-pine">
+			<div class="w-full lg:w-2/5 lg:sticky lg:top-32 flex flex-col">
+
+				<div class="hidden lg:flex flex-wrap items-center gap-3 mb-8 lg:mb-10">
+					<button class="tab-traiteur-btn px-6 py-2 rounded-full font-black text-[10px] uppercase tracking-widest transition-all duration-500 border-2 border-white/10 shadow-sm bg-cat-yellow text-cat-pine">
 						Traiteur & Evénementiel
 					</button>
 					
-					<button id="tab-cours" class="px-6 py-2 rounded-full font-black text-[10px] uppercase tracking-widest transition-all duration-500 border-2 border-cat-pine/10 shadow-sm bg-transparent text-cat-pine/40 hover:text-cat-pine hover:bg-cat-pine/5">
+					<button class="tab-cours-btn px-6 py-2 rounded-full font-black text-[10px] uppercase tracking-widest transition-all duration-500 border-2 border-white/10 shadow-sm bg-transparent text-white/40 hover:text-cat-pine hover:bg-cat-pine/5">
 						Ateliers Culinaires
 					</button>
 				</div>
 
-				<h2 id="service-title" class="text-4xl md:text-5xl font-bold text-cat-pine italic mb-8 leading-tight transition-all duration-500">
-					L'art de recevoir, <br/> façon Cat's Eyes.
+				<h2 id="service-title" class="text-4xl md:text-5xl font-bold text-white italic mb-8 leading-tight transition-all duration-500 mt-4 lg:mt-0">
+					Traiteur sur Mesure, <br/> façon Cat's Eyes.
 				</h2>
 
-				<div class="space-y-6 text-cat-pine/80 text-lg leading-relaxed italic">
+				<div class="space-y-6 text-white/80 text-lg leading-relaxed italic">
 					<p id="service-desc" class="transition-all duration-500">Que ce soit pour un séminaire d'entreprise à Orléans ou une fête privée, nous transformons vos événements en expériences sensorielles... dans nos locaux ou ailleurs !</p>
 					<p id="service-subdesc" class="transition-all duration-500">Brochettes de fruits givrés, hors-d'œuvre asiatiques raffinés, plateaux de jus pressés à la minute, soupes signatures et plein d'autres plats succulents !</p>
 				</div>
 
 				<div class="mt-12 flex flex-col gap-4">
-					<a id="service-btn-wa" href="https://wa.me/33631541175?text=Bonjour,%20je%20souhaite%20des%20infos%20sur%20le%20service%20traiteur" target="_blank" class="bg-cat-pine text-white text-center px-10 py-5 rounded-full font-bold text-lg shadow-xl hover:bg-cat-teal transition-all active:scale-95 duration-500">
+					<a id="service-btn-wa" href="https://wa.me/33631541175?text=Bonjour,%20je%20souhaite%20des%20infos%20sur%20le%20service%20traiteur" target="_blank" class="bg-cat-yellow text-white text-center px-10 py-5 rounded-full font-bold text-lg shadow-xl hover:bg-cat-teal transition-all active:scale-95 duration-500">
 						<span id="service-label-wa">Discuter sur WhatsApp</span>
 					</a>
 					<p class="text-xs text-center text-cat-pine/50 uppercase font-bold tracking-widest">Réponse sous 24h</p>
@@ -331,7 +341,7 @@ const slides = [
 		</div>
 	</section>
 
-	<script define:vars={{ slides }}>
+	<script>
 		const serviceData = {
 			traiteur: {
 				title: "L'art de recevoir, <br/> façon Cat's Eyes.",
@@ -343,9 +353,9 @@ const slides = [
 			},
 			cours: {
 				title: "Partagez un moment Authentique!",
-				desc: "Plongez dans l'univers de la cuisine traditionelle d'Asie du Sud-Est lors de nos cours de cuisine à Orléans. Venez partager notre univers au travers d'une expérience créative, atypique et conviale !",
+				desc: "Plongez dans l'univers de la cuisine traditionelle d'Asie du Sud-Est lors de nos cours de cuisine à Orléans. Découvrez notre univers au travers d'une expérience créative, atypique et conviale !",
 				subDesc: "Ateliers en petits groupes, matériel fourni et dégustation dans une ambiance chaleureuse.",
-				btn: "Réserver un atelier",
+				btn: "Réserver un Atelier",
 				waMsg: "Bonjour, j'aimerais connaître les prochaines dates des cours de cuisine",
 				images: [1, 2, 3].map(i => `/images/atelier-${i}.webp`)
 			}
@@ -356,8 +366,8 @@ const slides = [
 		const nextBtn = document.getElementById('traiteur-next');
 		const swipeIndicator = document.getElementById('swipe-indicator');
 		
-		const tabTraiteur = document.getElementById('tab-traiteur');
-		const tabCours = document.getElementById('tab-cours');
+		const tabsTraiteur = document.querySelectorAll('.tab-traiteur-btn');
+		const tabsCours = document.querySelectorAll('.tab-cours-btn');
 		
 		const serviceTitle = document.getElementById('service-title');
 		const serviceDesc = document.getElementById('service-desc');
@@ -368,59 +378,56 @@ const slides = [
 		let currentService = 'traiteur';
 
 		// --- FONCTION OUTIL : AFFICHAGE DE LA MAIN ---
-		let swipeTimer; // Mémoire pour le minuteur
+		let swipeTimer;
 
-        const showSwipe = () => {
-            if (!swipeIndicator) return;
+		const showSwipe = () => {
+			if (!swipeIndicator) return;
+			clearTimeout(swipeTimer);
 
-            // 1. On annule le minuteur précédent s'il existe pour éviter le bug de coupure
-            clearTimeout(swipeTimer);
+			swipeIndicator.style.display = 'flex';
+			requestAnimationFrame(() => {
+				swipeIndicator.classList.remove('opacity-0');
+				swipeIndicator.classList.add('opacity-100');
+			});
+			
+			swipeTimer = setTimeout(() => {
+				swipeIndicator.classList.replace('opacity-100', 'opacity-0');
+				setTimeout(() => { 
+					if (swipeIndicator.classList.contains('opacity-0')) {
+						swipeIndicator.style.display = 'none'; 
+					}
+				}, 700);
+			}, 3000);
+		};
 
-            // 2. On affiche
-            swipeIndicator.style.display = 'flex';
-            // Petit délai pour forcer le navigateur à voir le display:flex avant l'opacité
-            requestAnimationFrame(() => {
-                swipeIndicator.classList.remove('opacity-0');
-                swipeIndicator.classList.add('opacity-100');
-            });
-            
-            // 3. On programme la disparition
-            swipeTimer = setTimeout(() => {
-                swipeIndicator.classList.replace('opacity-100', 'opacity-0');
-                setTimeout(() => { 
-                    // On ne le cache que s'il est toujours en mode "disparition"
-                    if (swipeIndicator.classList.contains('opacity-0')) {
-                        swipeIndicator.style.display = 'none'; 
-                    }
-                }, 700);
-            }, 3000); // 3 secondes d'affichage bien pleines
-        };
-
-        // L'OBSERVER (On ajoute une sécurité pour ne pas le spammer au scroll)
-        let lastScrollTrigger = 0;
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                const now = Date.now();
-                if (entry.isIntersecting && now - lastScrollTrigger > 5000) {
-                    showSwipe();
-                    lastScrollTrigger = now; // On ne le relance pas avant 5 sec au scroll
-                }
-            });
-        }, { threshold: 0.4 });
-
-		// --- 1. LOGIQUE DE MISE À JOUR DES ONGLETS ---
+		// --- LOGIQUE DE MISE À JOUR DES ONGLETS (MISE À JOUR DE TOUS LES BOUTONS SIMULTANÉMENT) ---
 		const updateService = (newService) => {
 			if (newService === currentService) return;
 			
 			currentService = newService;
 			const data = serviceData[currentService];
 
+			// --- DESIGN DES ONGLETS & DU BOUTON WHATSAPP ---
 			if (currentService === 'traiteur') {
-				tabTraiteur.className = "px-6 py-2 rounded-full font-black text-[10px] uppercase tracking-widest transition-all duration-500 border-2 border-cat-pine/10 shadow-sm bg-cat-yellow text-cat-pine";
-				tabCours.className = "px-6 py-2 rounded-full font-black text-[10px] uppercase tracking-widest transition-all duration-500 border-2 border-cat-pine/10 shadow-sm bg-transparent text-cat-pine/40 hover:text-cat-pine";
+				// Onglet Traiteur : JAUNE
+				tabsTraiteur.forEach(btn => btn.className = "tab-traiteur-btn px-6 py-2 rounded-full font-black text-[10px] uppercase tracking-widest transition-all duration-500 border-2 border-white/10 shadow-sm bg-cat-yellow text-cat-pine");
+				// Onglet Cours : ÉTEINT
+				tabsCours.forEach(btn => btn.className = "tab-cours-btn px-6 py-2 rounded-full font-black text-[10px] uppercase tracking-widest transition-all duration-500 border-2 border-white/10 shadow-sm bg-transparent text-white/40 hover:text-white");
+				
+				// Bouton WhatsApp : VERT (ou la couleur d'origine de ton choix pour le traiteur)
+				if (serviceBtnWA) {
+					serviceBtnWA.className = "bg-cat-teal text-white text-center px-10 py-5 rounded-full font-bold text-lg shadow-xl hover:bg-cat-teal/90 transition-all active:scale-95 duration-500";
+				}
 			} else {
-				tabCours.className = "px-6 py-2 rounded-full font-black text-[10px] uppercase tracking-widest transition-all duration-500 border-2 border-cat-pine/10 shadow-sm bg-cat-yellow text-cat-pine";
-				tabTraiteur.className = "px-6 py-2 rounded-full font-black text-[10px] uppercase tracking-widest transition-all duration-500 border-2 border-cat-pine/10 shadow-sm bg-transparent text-cat-pine/40 hover:text-cat-pine";
+				// Onglet Cours : ROSE
+				tabsCours.forEach(btn => btn.className = "tab-cours-btn px-6 py-2 rounded-full font-black text-[10px] uppercase tracking-widest transition-all duration-500 border-2 border-white/10 shadow-sm bg-cat-pink text-white");
+				// Onglet Traiteur : ÉTEINT
+				tabsTraiteur.forEach(btn => btn.className = "tab-traiteur-btn px-6 py-2 rounded-full font-black text-[10px] uppercase tracking-widest transition-all duration-500 border-2 border-white/10 shadow-sm bg-transparent text-white/40 hover:text-white");
+				
+				// Bouton WhatsApp : ROSE POUR LES ATELIERS
+				if (serviceBtnWA) {
+					serviceBtnWA.className = "bg-cat-pink text-white text-center px-10 py-5 rounded-full font-bold text-lg shadow-xl hover:bg-cat-pink/90 transition-all active:scale-95 duration-500";
+				}
 			}
 
 			const els = [serviceTitle, serviceDesc, serviceSubDesc, serviceBtnWA];
@@ -449,7 +456,6 @@ const slides = [
 
 				carousel.scrollTo({ left: 0, behavior: 'smooth' });
 				
-				// APPEL DE LA MAIN AU CHANGEMENT
 				showSwipe(); 
 
 				if (typeof updateButtons === 'function') updateButtons();
@@ -460,17 +466,9 @@ const slides = [
 		const menuLinkAteliers = document.getElementById('menu-link-ateliers');
 		const menuLinkTraiteur = document.getElementById('menu-link-traiteur');
 
-		// Si on clique sur "ATELIERS" dans le menu
-		menuLinkAteliers?.addEventListener('click', () => {
-			updateService('cours');
-		});
+		menuLinkAteliers?.addEventListener('click', () => updateService('cours'));
+		menuLinkTraiteur?.addEventListener('click', () => updateService('traiteur'));
 
-		// Si on clique sur "TRAITEUR" dans le menu
-		menuLinkTraiteur?.addEventListener('click', () => {
-			updateService('traiteur');
-		});
-
-		// Gestion de l'arrivée directe via URL (ex: catseyes.fr/#ateliers)
 		window.addEventListener('load', () => {
 			if (window.location.hash === '#ateliers') {
 				updateService('cours');
@@ -478,10 +476,11 @@ const slides = [
 			}
 		});
 
-		tabTraiteur?.addEventListener('click', () => updateService('traiteur'));
-		tabCours?.addEventListener('click', () => updateService('cours'));
+		// On attache l'événement de clic sur la liste complète de boutons
+		tabsTraiteur.forEach(btn => btn.addEventListener('click', () => updateService('traiteur')));
+		tabsCours.forEach(btn => btn.addEventListener('click', () => updateService('cours')));
 
-		// --- 2. LOGIQUE CAROUSEL ---
+		// --- LOGIQUE CAROUSEL ---
 		if (carousel) {
 			const updateButtons = () => {
 				const scrollLeft = carousel.scrollLeft;
@@ -503,7 +502,6 @@ const slides = [
 			carousel.addEventListener('scroll', updateButtons);
 			window.addEventListener('load', updateButtons);
 
-			// OBSERVER POUR LE RETOUR SUR LA SECTION
 			const observer = new IntersectionObserver((entries) => {
 				entries.forEach(entry => {
 					if (entry.isIntersecting) {
@@ -1951,9 +1949,28 @@ const slides = [
 					45000 Orléans 
 				</p>
 				<p class="text-sm opacity-80">
-					Mardi - Samedi : 11h30 - 18h00<br/>
+					Mardi - Samedi : 11h30 - 19h00<br/>
 					Dimanche - Lundi : Fermé
 				</p>
+
+				{/* --- NOUVELLE SECTION PRIVATISATION & WHATSAPP --- */}
+				<div class="pt-2 border-t border-white/10 space-y-3">
+					<p class="text-[11px] font-medium leading-relaxed uppercase tracking-wider text-cat-yellow/90 italic">
+						✨ Réservation possible le soir (hors horaires classiques) à partir de 4 personnes.
+					</p>
+					
+					<a 
+						href="https://wa.me/33631541175?text=Bonjour%20Cat's%20Eyes,%20je%20souhaiterais%20avoir%20des%20informations%20pour%20une%20réservation%20en%20soirée%20!" 
+						target="_blank" 
+						rel="noopener noreferrer"
+						class="inline-flex items-center gap-2 bg-[#25D366] hover:bg-[#20ba5a] text-white text-[10px] font-black uppercase tracking-widest px-4 py-2 rounded-xl transition-all shadow-sm active:scale-95"
+					>
+						<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 fill-current" viewBox="0 0 24 24">
+							<path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397 0 11.948 0c3.173.001 6.154 1.24 8.396 3.486 2.241 2.247 3.477 5.234 3.475 8.411-.004 6.602-5.342 11.95-11.894 11.95-.003 0-.006 0-.01 0-2.002-.001-3.973-.51-5.713-1.478L0 24zm6.26-4.408c1.651.98 3.516 1.498 5.617 1.499h.008c5.426 0 9.839-4.394 9.843-9.8.002-2.618-1.013-5.08-2.859-6.932C17.078 2.507 14.61 1.493 11.95 1.493c-5.432 0-9.843 4.4-9.846 9.81-.001 1.973.517 3.896 1.499 5.616l-.993 3.63 3.707-.957zm11.533-3.61c-.29-.145-1.716-.848-1.982-.944-.266-.096-.46-.145-.653.145-.193.291-.748.944-.917 1.138-.17.193-.339.217-.63.072-1.748-.874-2.884-1.42-4.037-2.399-.304-.258-.46-.575-.157-.923.138-.158.29-.339.435-.509.145-.17.193-.29.29-.484.097-.194.048-.363-.024-.509-.072-.145-.653-1.573-.895-2.154-.236-.569-.475-.492-.653-.501-.17-.008-.363-.01-.556-.01-.193 0-.507.073-.772.364-.266.292-1.014.994-1.014 2.424 0 1.43 1.039 2.812 1.184 3.006.145.194 2.045 3.123 4.954 4.38.692.299 1.233.478 1.655.612.696.222 1.329.19 1.83.115.558-.083 1.716-.702 1.958-1.382.242-.68.242-1.261.17-1.382-.073-.12-.266-.194-.556-.339z"/>
+						</svg>
+						Discuter sur WhatsApp
+					</a>
+				</div>
 			</div>
 
 			<div class="space-y-4">
@@ -1968,8 +1985,12 @@ const slides = [
 		</div>
 
 		<div class="max-w-7xl mx-auto mt-16 pt-8 border-t border-cat-wood/5 flex flex-col md:flex-row justify-between items-center gap-4 text-[10px] uppercase tracking-widest opacity-40">
-			<p>© 2026 CAT'S EYES - TOUS DROITS RÉSERVÉS [cite: 1]</p>
-			<p>CONCEPTION : EVRAN CAMUS SOLUTIONS DIGITALES [cite: 2]</p>
+			<p>© 2026 CAT'S EYES - TOUS DROITS RÉSERVÉS</p>
+			
+			<p class="text-center md:text-right">
+				CONCEPTION : HYDRE - SOLUTIONS DIGITALES <br /> 
+				+33762351391
+			</p>
 		</div>
 	</footer>
 
