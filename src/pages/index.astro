@@ -724,39 +724,36 @@ const slides = [
 
 	<section id="menu" class="w-full py-24 bg-white px-6">
 		<div class="max-w-7xl mx-auto">
-			<!-- 1. CONDITION MODE VACANCES -->
-			{isVacation ? (
-				// MESSAGE D'ABSENCE STYLISÉ
-				<div class="max-w-3xl mx-auto text-center py-20 px-8 bg-[#f1e7d0] rounded-[4rem] border-4 border-cat-pine shadow-2xl">
-					<div class="mb-8 relative inline-block">
-						<span class="text-8xl block animate-bounce">☀️</span>
-						<span class="absolute -bottom-2 -right-2 text-4xl">⛱️</span>
-					</div>
-					
-					<h2 class="text-cat-teal font-black uppercase tracking-[0.2em] text-sm mb-4 italic">Pause Méritée</h2>
-					<h3 class="text-5xl font-bold text-cat-pine italic mb-8 leading-tight">
-						Votre restaurant <br/> prend l'air !
-					</h3>
-					
-					<div class="w-24 h-1 bg-cat-teal mx-auto mb-8 rounded-full opacity-30"></div>
-					
-					<p class="text-cat-pine/70 font-medium text-lg leading-relaxed max-w-xl mx-auto italic">
-						Cat's Eyes est actuellement fermé pour quelques jours de vacances. 
-						On recharge les batteries pour vous préparer de nouveaux Banh Mi encore plus gourmands !
-					</p>
-					
-					<div class="mt-12">
-						<p class="text-[10px] font-black uppercase tracking-[0.3em] text-cat-pine/40 italic">
-							Suivez-nous sur Instagram pour le retour
-						</p>
-						<a href="https://instagram.com/catseyesorleans" class="inline-block mt-4 text-cat-pine hover:text-cat-teal transition-colors">
-							<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-instagram"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></svg>
-						</a>
-					</div>
+			
+			<div id="vacation-message" class="hidden max-w-3xl mx-auto text-center py-20 px-8 bg-[#f1e7d0] rounded-[4rem] border-4 border-cat-pine shadow-2xl">
+				<div class="mb-8 relative inline-block">
+					<span class="text-8xl block animate-bounce">☀️</span>
+					<span class="absolute -bottom-2 -right-2 text-4xl">⛱️</span>
 				</div>
-			) : (
-				// 2. AFFICHAGE NORMAL DU MENU (Ton code actuel) 
-				<>
+				
+				<h2 class="text-cat-teal font-black uppercase tracking-[0.2em] text-sm mb-4 italic">Pause Méritée</h2>
+				<h3 class="text-5xl font-bold text-cat-pine italic mb-8 leading-tight">
+					Votre restaurant <br/> prend l'air !
+				</h3>
+				
+				<div class="w-24 h-1 bg-cat-teal mx-auto mb-8 rounded-full opacity-30"></div>
+				
+				<p class="text-cat-pine/70 font-medium text-lg leading-relaxed max-w-xl mx-auto italic">
+					Cat's Eyes est actuellement fermé pour quelques jours de vacances. 
+					On recharge les batteries pour vous préparer de nouveaux Banh Mi encore plus gourmands !
+				</p>
+				
+				<div class="mt-12">
+					<p class="text-[10px] font-black uppercase tracking-[0.3em] text-cat-pine/40 italic">
+						Suivez-nous sur Instagram pour le retour
+					</p>
+					<a href="https://instagram.com/catseyesorleans" class="inline-block mt-4 text-cat-pine hover:text-cat-teal transition-colors">
+						<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-instagram"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></svg>
+					</a>
+				</div>
+			</div>
+
+			<div id="normal-menu-content">
 				<div class="text-center mb-16">
 					<h2 class="text-cat-teal font-black uppercase tracking-widest text-[10px] mb-4 italic">La Carte</h2>
 					<h3 class="text-5xl font-bold text-cat-pine italic mb-12">Choisissez votre plaisir</h3>
@@ -776,13 +773,13 @@ const slides = [
 
 				<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10" id="product-grid">
 					{allProducts && allProducts.map((product) => {
-						const isEpuise = false;
+						const isEpuise = false; // Géré dynamiquement par le script JS en bas
 						const isPreorder = product.data.preorder === true;
 						const productIdClean = typeof product.id === "string" ? product.id.replace(/[^a-zA-Z0-9]/g, "") : "";
 
 						return (
 							<div 
-								class={`product-card group relative bg-white rounded-[2.5rem] border-2 border-cat-pine overflow-hidden shadow-lg transition-all flex flex-col ${isEpuise ? 'opacity-50 pointer-events-none' : 'hover:-translate-y-2'} ${isPreorder ? 'border-cat-teal/40 bg-cat-teal/[0.01]' : ''}`} 
+								class={`product-card group relative bg-white rounded-[2.5rem] border-2 border-cat-pine overflow-hidden shadow-lg transition-all flex flex-col hover:-translate-y-2 ${isPreorder ? 'border-cat-teal/40 bg-cat-teal/[0.01]' : ''}`} 
 								data-category={product.data.category}
 								data-product-id={product.id} 
 							>
@@ -792,11 +789,11 @@ const slides = [
 										id={`img-${productIdClean}`}
 										src={product.data.image} 
 										alt={product.data.title} 
-										class={`product-img w-full h-full object-cover group-hover:scale-105 transition-all duration-500 ${isEpuise ? 'grayscale' : ''}`} 
+										class="product-img w-full h-full object-cover group-hover:scale-105 transition-all duration-500" 
 									/>
 									
-									{/* Badge "Victime de son succès" */}
-									<div class={`victime-badge absolute inset-0 bg-cat-pine/20 flex items-center justify-center z-20 ${isEpuise ? '' : 'hidden'}`}>
+									{/* Badge "Victime de son succès" (Caché par défaut, activé par le script JS) */}
+									<div class="victime-badge absolute inset-0 bg-cat-pine/20 flex items-center justify-center z-20 hidden">
 										<span class="bg-white text-cat-pine px-4 py-2 rounded-full font-black uppercase text-[10px] tracking-widest shadow-xl border-2 border-cat-pine rotate-[-5deg]">
 											Victime de son succès
 										</span>
@@ -832,7 +829,6 @@ const slides = [
 										<p class="product-description text-cat-pine/70 text-sm italic leading-relaxed line-clamp-3 whitespace-pre-line transition-all duration-300">
 											{product.data.description}
 										</p>
-										{/* On garde une sécurité sur la longueur, mais on cache le bouton par défaut */}
 										{product.data.description && product.data.description.length > 50 && (
 											<button class="toggle-description hidden text-[10px] font-bold text-cat-teal uppercase tracking-widest mt-1 hover:underline" type="button">
 												+ Voir plus
@@ -848,7 +844,8 @@ const slides = [
 												{Array.isArray(group.options) && group.options.map((option) => (
 													<button 
 														type="button"
-														class={`variant-btn px-4 py-2 rounded-xl border-2 border-cat-pine text-[10px] font-black uppercase tracking-tighter bg-white text-cat-pine`}														data-target={`img-${productIdClean}`}
+														class="variant-btn px-4 py-2 rounded-xl border-2 border-cat-pine text-[10px] font-black uppercase tracking-tighter bg-white text-cat-pine"
+														data-target={`img-${productIdClean}`}
 														data-image={option.image || product.data.image}
 													>
 														{option.name}
@@ -866,7 +863,7 @@ const slides = [
 												{product.data.extras.map((extra) => (
 													<button 
 														type="button"
-														class={`extra-btn px-3 py-1.5 rounded-xl border-2 border-dashed border-cat-pine/20 text-[10px] font-bold text-cat-pine bg-white flex items-center gap-1.5`}
+														class="extra-btn px-3 py-1.5 rounded-xl border-2 border-dashed border-cat-pine/20 text-[10px] font-bold text-cat-pine bg-white flex items-center gap-1.5"
 														data-extra-name={extra.name}
 														data-extra-price={extra.price}
 													>
@@ -919,8 +916,7 @@ const slides = [
 									{/* FOOTER */}
 									<div class="mt-auto pt-4 border-t border-dashed border-cat-pine/10 flex justify-between items-center gap-2">
 										<div class="flex flex-col">
-											{/* Preorder logic - Toujours conditionnel car lié au temps, pas au stock live */}
-											{isPreorder && !isEpuise && (
+											{isPreorder && (
 												<div class="preorder-badge flex items-center gap-2 bg-cat-teal/10 border border-cat-teal/20 px-3 py-1.5 rounded-xl shadow-sm">
 													<span class="animate-pulse text-xs">⏳</span>
 													<div class="flex flex-col">
@@ -930,14 +926,14 @@ const slides = [
 												</div>
 											)}
 											
-											{/* Texte Indisponible */}
-											<span class={`status-indisponible text-[10px] font-black uppercase tracking-widest text-cat-pine/40 italic ${isEpuise ? '' : 'hidden'}`}>
-												Indisponible
+											{/* Texte Indisponible (Activé par le JS) */}
+											<span class="status-indisponible text-[10px] font-black uppercase tracking-widest text-red-400 italic hidden">
+												Épuisé ⚡️
 											</span>
 										</div>
 										
 										<button 
-											class={`add-to-cart-btn bg-cat-pine text-white w-12 h-12 rounded-2xl flex items-center justify-center hover:bg-cat-teal shadow-lg active:scale-90 transition-all group/btn ${isEpuise ? 'hidden' : ''}`}
+											class="add-to-cart-btn bg-cat-pine text-white w-12 h-12 rounded-2xl flex items-center justify-center hover:bg-cat-teal shadow-lg active:scale-90 transition-all group/btn"
 											data-id={product.id}
 											data-title={product.data.title}
 											data-price={product.data.price}
@@ -954,8 +950,8 @@ const slides = [
 						);
 					})}
 				</div>
-				</>
-			)}
+			</div>
+
 		</div>
 	</section>
 
@@ -1089,7 +1085,30 @@ const slides = [
 			const slugify = (text) => text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "");
 
 			async function applyLiveStocks() {
-				const { data: stocksData } = await supabase.from('stocks').select('product_slug, en_stock');
+				// 1. On récupère en parallèle l'état des stocks ET le mode vacances
+				const [stocksRes, settingsRes] = await Promise.all([
+					supabase.from('stocks').select('product_slug, en_stock'),
+					supabase.from('settings').select('value').eq('key', 'vacation_mode').single()
+				]);
+
+				const stocksData = stocksRes.data;
+				const isVacationLive = settingsRes.data?.value || false;
+
+				// --- DEUXIÈME SÉCURITÉ : BASRULE DU MODE VACANCES LIVE ---
+				const vacationMessageEl = document.getElementById('vacation-message');
+				const normalMenuContentEl = document.getElementById('normal-menu-content');
+
+				if (isVacationLive) {
+					// Si vacances actives : on affiche le message et on cache le menu
+					vacationMessageEl?.classList.remove('hidden');
+					normalMenuContentEl?.classList.add('hidden');
+					return; // On s'arrête là, pas besoin de traiter le stock des plats
+				} else {
+					// Sinon, on s'assure que le menu est bien visible
+					vacationMessageEl?.classList.add('hidden');
+					normalMenuContentEl?.classList.remove('hidden');
+				}
+
 				if (!stocksData) return;
 
 				// 1. Traitement des Plats épuisés
