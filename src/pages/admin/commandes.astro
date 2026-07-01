@@ -283,7 +283,6 @@ import Layout from '../../layouts/Layout.astro';
             const pointsToAdd = Math.floor(orderAmount / 10);
 
             if (!confirm(`Confirmer le paiement ?\nMontant : ${orderAmount}€\nPoints à créditer : +${pointsToAdd}`)) return;
-            
             const card = document.getElementById(`order-${orderId}`);
             if (card) card.style.opacity = "0.3";
 
@@ -303,7 +302,6 @@ import Layout from '../../layouts/Layout.astro';
                 await supabase.from('profils')
                     .insert([{ telephone: phone, points_fidelite: pointsToAdd }]);
             }
-
             card?.remove();
             if (document.getElementById('orders-grid')?.children.length === 0) {
                 document.getElementById('empty-state')?.classList.remove('hidden');

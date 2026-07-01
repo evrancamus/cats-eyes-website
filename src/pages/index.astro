@@ -15,30 +15,16 @@ const isVacation = settingsRes.data?.value || false;
 
 // 3. GESTION DES STOCKS (Plats et Ingrédients)
 const stocksData = stocksRes.data || [];
-const GLOBAL_STOCK_PREFIX = 'global:';
 
-// Fonction de nettoyage stricte identique à la page stock
-function cleanString(str: string) {
-    return str
-        .toLowerCase()
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .replace(/[^a-z0-9]/g, "-")
-        .replace(/-+/g, "-")
-        .replace(/^-|-$/g, "");
-}
-
-// 1. Liste des slugs de PLATS épuisés (ex: "banh-cuon")
+// Tableau des IDs de plats épuisés (ex: ["banh-cuon"])
 const slugsEpuises = stocksData
-    .filter(s => s.en_stock === false && !s.product_slug.startsWith(GLOBAL_STOCK_PREFIX))
+    .filter(s => s.en_stock === false && !s.product_slug.startsWith('global:'))
     .map(s => s.product_slug);
-const slugsEpuisesSet = new Set(slugsEpuises);
 
-// 2. Liste des INGRÉDIENTS épuisés (ex: "boeuf")
+// Tableau des ingrédients globaux épuisés (nettoyés pour la comparaison)
 const ingredientsEpuises = stocksData
-    .filter(s => s.en_stock === false && s.product_slug.startsWith(GLOBAL_STOCK_PREFIX))
-    .map(s => s.product_slug.replace(GLOBAL_STOCK_PREFIX, "")); // On garde juste "boeuf"
-const ingredientsEpuisesSet = new Set(ingredientsEpuises);
+    .filter(s => s.en_stock === false && s.product_slug.startsWith('global:'))
+    .map(s => s.product_slug.replace('global:', ''));
 
 // 4. TRI DES PRODUITS (Best Sellers en premier)
 const allProducts = allProductsRaw.sort((a, b) => {
@@ -53,11 +39,10 @@ const allProducts = allProductsRaw.sort((a, b) => {
 // 5. GÉNÉRATION DYNAMIQUE DES CATÉGORIES
 // On récupère toutes les catégories présentes dans les fichiers markdown/json
 const dynamicCategories = [...new Set(allProducts.map(p => p.data.category))];
-const dynamicCategoriesSet = new Set(dynamicCategories);
 
 // On définit l'ordre souhaité (optionnel) et on filtre pour ne garder que ce qui existe
 const order = ["Soupes", "Plats", "Desserts", "Hors d'œuvres"];
-const availableCategories = order.filter(cat => dynamicCategoriesSet.has(cat));
+const availableCategories = order.filter(cat => dynamicCategories.includes(cat));
 
 // On ajoute "Tout" au début
 const categories = ["Tout", ...availableCategories];
@@ -80,7 +65,7 @@ const slides = [
         subtitle: "L'ADN Cat's Eyes",
         icon: "/icons/healthy.png",
         color: "#126b13",
-        description: "Toutes nos recettes sont cuisinées minute, à partir d'ingrédients frais et de qualité.<br><br>Nos soupes et bouillons vous offrent une authenticité rare, chacun de nos plats est un voyage"
+        description: "Toutes nos recettes sont cuisinées minute, à partir d'ingrédients frais et de qualité.<br><br>Nos soupes et bouillons vous offrent une authenticité rare, chaque plat est un voyage"
     },
     {
         image: "/images/concept-4.webp",
@@ -112,7 +97,7 @@ const slides = [
         subtitle: "L'ADN Cat's Eyes",
         icon: "/icons/strategy.png",
         color: "#388fa2",
-        description: "Une bonne partie d'échecs... un jus pressé... ou une soupe... Ou les deux !"
+        description: "Une bonne partie d'échecs... un jus pressé... ou une soupe... Ou les deux"
     },
 ];
 ---
@@ -135,7 +120,7 @@ const slides = [
 					<a href="#menu" class="hover:text-white hover:-translate-y-0.5 transition-all text-xs lg:text-sm">La Carte</a>
 					<a href="#jus" class="hover:text-white hover:-translate-y-0.5 transition-all text-xs lg:text-sm">Les Jus</a>
 					<a href="#traiteur" id="menu-link-traiteur" class="hover:text-white transition-colors">Traiteur</a>
-					<a href="#traiteur" id="menu-link-ateliers" class="hover:text-white transition-colors">Ateliers</a>
+					<a href="#ateliers" id="menu-link-ateliers" class="hover:text-white transition-colors">Ateliers</a>
 				</nav>
 
 				<div class="flex items-center gap-2 lg:gap-4">
@@ -224,7 +209,7 @@ const slides = [
 								hover:scale-105 hover:bg-cat-yellow hover:border-white/50
 								active:scale-95 text-base md:text-lg text-center">
 								Je prépare un événement
-							</a>
+							</a>y
 						</div>
 					</div>
 				</div>
@@ -273,6 +258,7 @@ const slides = [
 	
 	<section id="traiteur" class="w-full bg-cat-pine py-20 px-6 overflow-hidden">
 		<div class="max-w-7xl mx-auto flex flex-col lg:flex-row gap-12 items-start">
+
 			
 			<div class="w-full lg:hidden flex flex-wrap items-center gap-3 mb-2">
 				<button class="tab-traiteur-btn px-6 py-2 rounded-full font-black text-[10px] uppercase tracking-widest transition-all duration-500 border-2 border-white/10 shadow-sm bg-cat-yellow text-cat-pine">
@@ -284,6 +270,7 @@ const slides = [
 			</div>
 			
 			<div class="w-full lg:w-3/5 relative group">
+				
 				<button id="traiteur-prev" class="hidden lg:flex absolute -left-6 top-1/2 -translate-y-1/2 z-40 bg-white p-4 rounded-full shadow-2xl text-cat-pine hover:bg-cat-yellow transition-all duration-300 pointer-events-none opacity-0">
 					<svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
 						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M15 19l-7-7 7-7" />
@@ -324,11 +311,12 @@ const slides = [
 			</div>
 
 			<div class="w-full lg:w-2/5 lg:sticky lg:top-32 flex flex-col">
-				
+
 				<div class="hidden lg:flex flex-wrap items-center gap-3 mb-8 lg:mb-10">
 					<button class="tab-traiteur-btn px-6 py-2 rounded-full font-black text-[10px] uppercase tracking-widest transition-all duration-500 border-2 border-white/10 shadow-sm bg-cat-yellow text-cat-pine">
 						Traiteur & Evénementiel
 					</button>
+					
 					<button class="tab-cours-btn px-6 py-2 rounded-full font-black text-[10px] uppercase tracking-widest transition-all duration-500 border-2 border-white/10 shadow-sm bg-transparent text-white/40 hover:text-cat-pine hover:bg-cat-pine/5">
 						Ateliers Culinaires
 					</button>
@@ -350,14 +338,13 @@ const slides = [
 					<p class="text-xs text-center text-cat-pine/50 uppercase font-bold tracking-widest">Réponse sous 24h</p>
 				</div>
 			</div>
-
 		</div>
 	</section>
 
-	<script define:vars={{ slides }}>
+	<script>
 		const serviceData = {
 			traiteur: {
-				title: "Traiteur sur Mesure, <br/> façon Cat's Eyes.",
+				title: "L'art de recevoir, <br/> façon Cat's Eyes.",
 				desc: "Que ce soit pour un séminaire d'entreprise à Orléans ou une fête privée, nous transformons vos événements en expériences sensorielles... dans nos locaux ou ailleurs !",
 				subDesc: "Brochettes de fruits givrés, hors-d'œuvre asiatiques raffinés, plateaux de jus pressés à la minute, soupes signatures et plein d'autres plats succulents !",
 				btn: "Discuter sur WhatsApp",
@@ -379,7 +366,6 @@ const slides = [
 		const nextBtn = document.getElementById('traiteur-next');
 		const swipeIndicator = document.getElementById('swipe-indicator');
 		
-		// SÉLECTION MULTIPLE DES BOUTONS (Mobile + PC)
 		const tabsTraiteur = document.querySelectorAll('.tab-traiteur-btn');
 		const tabsCours = document.querySelectorAll('.tab-cours-btn');
 		
@@ -430,7 +416,7 @@ const slides = [
 				
 				// Bouton WhatsApp : VERT (ou la couleur d'origine de ton choix pour le traiteur)
 				if (serviceBtnWA) {
-					serviceBtnWA.className = "bg-cat-yellow text-white text-center px-10 py-5 rounded-full font-bold text-lg shadow-xl hover:bg-cat-teal/90 transition-all active:scale-95 duration-500";
+					serviceBtnWA.className = "bg-cat-teal text-white text-center px-10 py-5 rounded-full font-bold text-lg shadow-xl hover:bg-cat-teal/90 transition-all active:scale-95 duration-500";
 				}
 			} else {
 				// Onglet Cours : ROSE
@@ -440,11 +426,10 @@ const slides = [
 				
 				// Bouton WhatsApp : ROSE POUR LES ATELIERS
 				if (serviceBtnWA) {
-					serviceBtnWA.className = "bg-cat-pink text-white text-center px-10 py-5 rounded-full font-bold text-lg shadow-xl hover:bg-cat-teal/90 transition-all active:scale-95 duration-500";
+					serviceBtnWA.className = "bg-cat-pink text-white text-center px-10 py-5 rounded-full font-bold text-lg shadow-xl hover:bg-cat-pink/90 transition-all active:scale-95 duration-500";
 				}
 			}
 
-			// --- LE RESTE DE TON CODE RESTE INCHANGÉ ---
 			const els = [serviceTitle, serviceDesc, serviceSubDesc, serviceBtnWA];
 			els.forEach(el => { if(el) { el.style.opacity = '0'; el.style.transform = 'translateY(10px)'; } });
 
@@ -810,10 +795,9 @@ const slides = [
 
 				<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10" id="product-grid">
 					{allProducts && allProducts.map((product) => {
-						const isEpuise = slugsEpuisesSet.has(product.id.toLowerCase());
+						const isEpuise = Array.isArray(slugsEpuises) && slugsEpuises.includes(product.id);
 						const isPreorder = product.data.preorder === true;
 						const productIdClean = typeof product.id === "string" ? product.id.replace(/[^a-zA-Z0-9]/g, "") : "";
-						const productImagePath = typeof product.data.image === "string" ? product.data.image : "";
 
 						return (
 							<div 
@@ -825,16 +809,14 @@ const slides = [
 								<div class="aspect-[4/3] overflow-hidden relative border-b-2 border-cat-pine">
 									<img 
 										id={`img-${productIdClean}`}
-										src={productImagePath} 
+										src={product.data.image} 
 										alt={product.data.title} 
-										loading="lazy"
-										onerror="this.onerror=null; if(!this.src.includes('.jpg')) { this.src = this.src.replace('.jpeg', '.jpg'); }"
 										class={`product-img w-full h-full object-cover group-hover:scale-105 transition-all duration-500 ${isEpuise ? 'grayscale' : ''}`} 
 									/>
 									
-									<!-- Badge "Victime de son succès" -->
-									<div class={`victime-badge absolute inset-0 bg-cat-pine/20 flex items-center justify-center z-30 ${isEpuise ? '' : 'hidden'}`} style="pointer-events: none;">
-										<span class="bg-white text-cat-pine px-4 py-2 rounded-full font-black uppercase text-[10px] tracking-widest shadow-xl border-2 border-cat-pine block transform rotate-[-5deg] whitespace-nowrap">
+									{/* Badge "Victime de son succès" */}
+									<div class={`victime-badge absolute inset-0 bg-cat-pine/20 flex items-center justify-center z-20 ${isEpuise ? '' : 'hidden'}`}>
+										<span class="bg-white text-cat-pine px-4 py-2 rounded-full font-black uppercase text-[10px] tracking-widest shadow-xl border-2 border-cat-pine rotate-[-5deg]">
 											Victime de son succès
 										</span>
 									</div>
@@ -885,7 +867,7 @@ const slides = [
 												{Array.isArray(group.options) && group.options.map((option) => (
 													<button 
 														type="button"
-														class={`variant-btn px-4 py-2 rounded-xl border-2 border-cat-pine text-[10px] font-black uppercase tracking-tighter bg-white text-cat-pine ${ingredientsEpuisesSet.has(option.name.toLowerCase()) ? 'opacity-30 line-through pointer-events-none' : ''}`}
+														class={`variant-btn px-4 py-2 rounded-xl border-2 border-cat-pine text-[10px] font-black uppercase tracking-tighter bg-white text-cat-pine ${Array.isArray(ingredientsEpuises) && ingredientsEpuises.includes(option.name.toLowerCase()) ? 'opacity-30 line-through pointer-events-none' : ''}`}
 														data-target={`img-${productIdClean}`}
 														data-image={option.image || product.data.image}
 													>
@@ -904,7 +886,7 @@ const slides = [
 												{product.data.extras.map((extra) => (
 													<button 
 														type="button"
-														class={`extra-btn px-3 py-1.5 rounded-xl border-2 border-dashed border-cat-pine/20 text-[10px] font-bold text-cat-pine bg-white flex items-center gap-1.5 ${ingredientsEpuisesSet.has(extra.name.toLowerCase()) ? 'opacity-30 line-through pointer-events-none' : ''}`}
+														class={`extra-btn px-3 py-1.5 rounded-xl border-2 border-dashed border-cat-pine/20 text-[10px] font-bold text-cat-pine bg-white flex items-center gap-1.5 ${Array.isArray(ingredientsEpuises) && ingredientsEpuises.includes(extra.name.toLowerCase()) ? 'opacity-30 line-through pointer-events-none' : ''}`}
 														data-extra-name={extra.name}
 														data-extra-price={extra.price}
 													>
@@ -1120,14 +1102,7 @@ const slides = [
 
 	<script>
 		import { supabase } from '../lib/supabase';
-		import {
-			attachCategoryFilterHandlers,
-			attachGlobalInteractionHandlers,
-			getHomePageElements,
-			initDescriptionToggles,
-			setupModalActions,
-			setupLiveStockSync
-		} from '../scripts/home';
+
 		document.addEventListener('DOMContentLoaded', () => {
 			// --- 1. ÉTAT GLOBAL & OUTILS ---
 			let cart = [];
@@ -1173,11 +1148,93 @@ const slides = [
 			});
 
 			// --- 2. SÉLECTEURS UI ---
-			const elements = getHomePageElements();
-			let closeAllModals = () => {};
+			const elements = {
+				// Cookies & Légal
+				banner: document.getElementById('cookie-banner'),
+				acceptBtn: document.getElementById('accept-cookies'),
+				declineBtn: document.getElementById('decline-cookies'),
 
-			// --- LOGIQUE DE FILTRAGE ---
-			attachCategoryFilterHandlers(elements);
+				// Menu Mobile
+				menuBtn: document.getElementById('menu-btn'),
+				mobileMenu: document.getElementById('mobile-menu'),
+
+				// Panier (Interface)
+				openCart: document.getElementById('open-cart'),
+				cartModal: document.getElementById('cart-modal'),
+				closeCartBtn: document.getElementById('close-cart-btn'),
+				cartOverlay: document.getElementById('close-cart-overlay'),
+				cartCountBadge: document.getElementById('cart-count'),
+				cartItemsList: document.getElementById('cart-items-list'),
+				totalPrice: document.getElementById('cart-total-price'),
+
+				// Produits & Filtres
+				categoryBtns: document.querySelectorAll('.filter-btn'),
+				productCards: document.querySelectorAll('.product-card'),
+				variantBtns: document.querySelectorAll('.variant-btn'),
+				addToCartBtns: document.querySelectorAll('.add-to-cart-btn'),
+
+				// Envoi Commande (Boutons du Panier)
+				whatsappBtn: document.getElementById('send-order-whatsapp'),
+				smsBtn: document.getElementById('send-order-sms'),
+
+				// Profil & Fidélité
+				openProfile: document.getElementById('open-profile'),
+				profileModal: document.getElementById('profile-modal'),
+				closeProfileBtn: document.getElementById('close-profile-btn'),
+				profileOverlay: document.getElementById('close-profile-overlay'),
+				checkLoyaltyBtn: document.getElementById('check-loyalty'),
+
+				// Champs de saisie (Inputs)
+				clientNameInput: document.getElementById('client-name'),
+				clientPhoneInput: document.getElementById('client-phone'),
+				lookupPhoneInput: document.getElementById('lookup-phone'),
+
+				// Nouveau Modal de Confirmation Perso
+				confirmModal: document.getElementById('confirm-order-modal'),
+				confirmDetails: document.getElementById('confirm-details'),
+				finalWhatsappBtn: document.getElementById('final-whatsapp-btn'),
+				noWhatsappBtn: document.getElementById('no-whatsapp-btn'),
+				smsFallback: document.getElementById('sms-fallback-msg'),
+				cancelBtn: document.getElementById('cancel-confirm-btn'),
+				confirmAltBtn: document.getElementById('confirm-alt-btn')
+			};
+
+			// --- LOGIQUE DE FILTRAGE (VERSION TOLÉRANTE) ---
+			elements.categoryBtns.forEach(btn => {
+				btn.addEventListener('click', (e) => {
+					e.preventDefault();
+					// On récupère la valeur et on la nettoie
+					const rawFilter = btn.getAttribute('data-filter') || btn.getAttribute('data-category');
+					const filterValue = rawFilter ? rawFilter.trim().toLowerCase() : 'all';
+					
+					console.log("Btn cliqué:", filterValue);
+
+					// 1. Visuel des boutons
+					elements.categoryBtns.forEach(b => b.classList.remove('bg-cat-yellow'));
+					btn.classList.add('bg-cat-yellow');
+
+					// 2. Filtrage
+					elements.productCards.forEach(card => {
+						const rawCardCat = card.getAttribute('data-category');
+						const cardCategory = rawCardCat ? rawCardCat.trim().toLowerCase() : '';
+						
+						console.log("Vérif carte:", cardCategory, "vs", filterValue);
+
+						if (filterValue === "all" || filterValue === "tout" || cardCategory === filterValue) {
+							card.style.setProperty('display', 'flex', 'important');
+							card.classList.remove('hidden');
+							card.style.opacity = "1";
+						} else {
+							card.style.setProperty('display', 'none', 'important');
+							card.classList.add('hidden');
+						}
+					});
+				});
+			});
+
+			// On active le bouton "Tout" par défaut au démarrage
+			const defaultBtn = document.querySelector('[data-filter="all"]');
+			if (defaultBtn) defaultBtn.classList.add('bg-cat-yellow');
 
 			// --- 3. GESTION DES COOKIES & MÉMOIRE ---
 			const hideBanner = () => {
@@ -1275,8 +1332,112 @@ const slides = [
 				updateCartUI();
 			};
 
-			// --- INTERACTIONS GLOBALES (variantes, extras, allergènes, piment) ---
-			attachGlobalInteractionHandlers();
+			// --- 1. GESTION DES CLICS (Variantes, Suppléments & Descriptions) ---
+			document.addEventListener('click', (e) => {
+				
+				// On définit les cibles potentielles
+				const extraBtn = e.target.closest('.extra-btn');
+				const variantBtn = e.target.closest('.variant-btn');
+				const toggleBtn = e.target.closest('.toggle-description');
+
+				// CAS A : LES SUPPLÉMENTS
+				if (extraBtn) {
+					extraBtn.classList.toggle('extra-selected');
+					return; 
+				}
+
+				// CAS B : LES VARIANTES
+				if (variantBtn) {
+					e.preventDefault();
+					const container = variantBtn.closest('.group-container'); 
+					const targetImgId = variantBtn.getAttribute('data-target');
+					const newSrc = variantBtn.getAttribute('data-image');
+					const productImg = document.getElementById(targetImgId);
+
+					if (container) {
+						// 1. On retire l'état "actif" de tous les boutons du groupe uniquement
+						container.querySelectorAll('.variant-btn').forEach(b => {
+							b.classList.remove('active-variant', 'bg-cat-yellow');
+							b.classList.add('bg-white');
+						});
+						
+						// 2. On active le bouton cliqué
+						variantBtn.classList.add('active-variant', 'bg-cat-yellow');
+						variantBtn.classList.remove('bg-white');
+
+						// 3. Changement d'image fluide
+						if (productImg && newSrc && newSrc.trim() !== "") {
+							productImg.style.opacity = '0.5';
+							setTimeout(() => {
+								productImg.src = newSrc;
+								productImg.style.opacity = '1';
+							}, 100);
+						}
+					}
+					return;
+				}
+
+				// CAS C : LE "VOIR PLUS" DES DESCRIPTIONS
+				if (toggleBtn) {
+					e.preventDefault();
+					const container = toggleBtn.closest('.description-container');
+					const text = container.querySelector('.product-description');
+					const isExpanded = text.classList.contains('line-clamp-none');
+					
+					if (isExpanded) {
+						text.classList.remove('line-clamp-none');
+						text.classList.add('line-clamp-3');
+						toggleBtn.textContent = '+ Voir plus';
+					} else {
+						text.classList.remove('line-clamp-3');
+						text.classList.add('line-clamp-none');
+						toggleBtn.textContent = '- Réduire';
+					}
+				}
+
+				// CAS D : CLIC SUR UN ALLERGÈNE
+				const allergenBtn = e.target.closest('.allergen-btn');
+				if (allergenBtn) {
+					e.preventDefault(); // Sécurité
+					// On bascule UNIQUEMENT la classe de sélection
+					// Le CSS se chargera de changer les couleurs grâce au !important
+					allergenBtn.classList.toggle('allergen-selected');
+					return; // On arrête là
+				}
+			});
+
+			// --- GESTION DES JAUGES DE PIMENT ---
+			const spiceLabels = ["Pas de Piment 🌿", "Doux 🌶️", "Relevé 🔥", "Lave 🌋"];
+
+			// Tableau des icônes en SVG pour le curseur
+			const spiceIcons = [
+				"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><text y='18' font-size='16'>🌿</text></svg>",
+				"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><text y='18' font-size='16'>🌶️</text></svg>",
+				"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><text y='18' font-size='16'>🔥</text></svg>",
+				"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><text y='18' font-size='16'>🌋</text></svg>"
+			];
+
+			document.addEventListener('input', (e) => {
+				if (e.target.classList.contains('spice-range')) {
+					const container = e.target.closest('.spice-container') || e.target.closest('div.mb-6');
+					const textLabel = container?.querySelector('.spice-level-text');
+					const val = e.target.value;
+
+					if (textLabel) {
+						textLabel.textContent = spiceLabels[val];
+						
+						// Effet visuel pour le niveau max
+						if (val == 3) {
+							textLabel.classList.add('animate-pulse', 'text-red-700');
+						} else {
+							textLabel.classList.remove('animate-pulse', 'text-red-700');
+						}
+					}
+
+					// On change l'icône du curseur en modifiant la variable CSS
+					e.target.style.setProperty('--spice-icon', `url("${spiceIcons[val]}")`);
+				}
+			});
 
 			// --- 2. Mise à jour du bouton d'ajout au panier ---
 			elements.addToCartBtns.forEach(btn => {
@@ -1639,11 +1800,118 @@ const slides = [
 			});
 
 			// --- GESTION DU "VOIR PLUS" DYNAMIQUE ---
-			initDescriptionToggles();
+			const initDescriptions = () => {
+				const containers = document.querySelectorAll('.description-container');
+				containers.forEach(container => {
+					const textEl = container.querySelector('.product-description');
+					const btn = container.querySelector('.toggle-description');
 
-			// --- MODALS / ACTIONS / STOCK LIVE ---
-			closeAllModals = setupModalActions(elements, updateCartUI, handleOrder).closeAllModals;
-			const stockChannel = setupLiveStockSync(supabase);
+					if (textEl && btn) {
+						// On vérifie si le texte dépasse réellement la hauteur de 3 lignes
+						const isOverflowing = textEl.scrollHeight > textEl.clientHeight;
+
+						if (isOverflowing) {
+							btn.classList.remove('hidden'); // On affiche le bouton
+						} else {
+							btn.remove(); // On supprime le bouton s'il n'y a pas de débordement
+						}
+					}
+				});
+			};
+
+			// --- 7. MODAL ACTIONS ---
+			const closeAllModals = () => {
+				elements.cartModal?.classList.add('hidden');
+				elements.profileModal?.classList.add('hidden');
+				document.body.style.overflow = '';
+			};
+
+			elements.openCart?.addEventListener('click', () => {
+				updateCartUI(false);
+				elements.cartModal?.classList.remove('hidden');
+				document.body.style.overflow = 'hidden';
+			});
+
+			elements.openProfile?.addEventListener('click', () => {
+				elements.profileModal?.classList.remove('hidden');
+				document.body.style.overflow = 'hidden';
+			});
+
+			[elements.closeCartBtn, elements.cartOverlay, elements.closeProfileBtn, elements.profileOverlay].forEach(btn => {
+				btn?.addEventListener('click', closeAllModals);
+			});
+
+			// --- CONNEXION DU BOUTON RÉSERVER ---
+			elements.whatsappBtn?.addEventListener('click', () => {
+				handleOrder('wa');
+			});
+
+			// Si tu as gardé un bouton SMS quelque part, sinon la ligne du dessus suffit
+			elements.smsBtn?.addEventListener('click', () => {
+				handleOrder('sms');
+			});
+
+			// --- 8. SYNCHRONISATION LIVE (PLATS + INGRÉDIENTS) ---
+			const stockChannel = supabase
+				.channel('live-inventory-' + Math.random()) // Canal unique pour éviter les conflits
+				.on('postgres_changes', { 
+					event: 'UPDATE', 
+					schema: 'public', 
+					table: 'stocks' 
+				}, (payload) => {
+					const { product_slug, en_stock } = payload.new;
+					console.log("⚡️ Mise à jour stock :", product_slug, en_stock);
+
+					// CASE A : C'EST UN INGRÉDIENT GLOBAL
+					if (product_slug.startsWith('global:')) {
+						const ingredientName = product_slug.split(':')[1].replace(/-/g, ' ').toLowerCase();
+						console.log("🛠 Ingrédient reçu :", ingredientName);
+
+						const allBtns = document.querySelectorAll('.variant-btn, .extra-btn');
+						allBtns.forEach(btn => {
+							const btnText = btn.textContent.trim().toLowerCase();
+							
+							if (btnText.includes(ingredientName)) {
+								console.log("🎯 Match trouvé sur :", btnText);
+								if (en_stock === false) {
+									btn.classList.add('opacity-30', 'pointer-events-none', 'line-through');
+									btn.classList.remove('active-variant', 'bg-cat-yellow');
+								} else {
+									btn.classList.remove('opacity-30', 'pointer-events-none', 'line-through');
+								}
+							}
+						});
+					}
+
+					// CASE B : PLAT COMPLET (Correction des visuels)
+					const productCard = document.querySelector(`[data-product-id="${product_slug}"]`);
+					if (productCard) {
+						const isEpuise = en_stock === false;
+						const badge = productCard.querySelector('.victime-badge');
+						const productImage = productCard.querySelector('.product-img');
+						const btnAdd = productCard.querySelector('.add-to-cart-btn');
+						const textIndispo = productCard.querySelector('.status-indisponible');
+						const preorderBadge = productCard.querySelector('.preorder-badge');
+
+						if (isEpuise) {
+							productCard.classList.add('opacity-50', 'pointer-events-none');
+							productImage?.classList.add('grayscale');
+							badge?.classList.remove('hidden');
+							btnAdd?.classList.add('hidden');
+							textIndispo?.classList.remove('hidden');
+							preorderBadge?.classList.add('hidden');
+						} else {
+							productCard.classList.remove('opacity-50', 'pointer-events-none');
+							productImage?.classList.remove('grayscale');
+							badge?.classList.add('hidden');
+							btnAdd?.classList.remove('hidden');
+							textIndispo?.classList.add('hidden');
+							// Le preorder badge réapparaît si la carte est de type preorder (logique simplifiée)
+							if (productCard.classList.contains('border-cat-teal/40')) preorderBadge?.classList.remove('hidden');
+						}
+					}
+				})
+				.subscribe();
 
 			// --- INITIALISATION ---
 			if (!getCatCookie('catseyes_consent') && elements.banner) {
@@ -1651,7 +1919,7 @@ const slides = [
 			}
 
 			restoreUserSession();
-			setTimeout(initDescriptionToggles, 100);
+			setTimeout(initDescriptions, 100);
 		});
 	</script>
 
@@ -1665,10 +1933,10 @@ const slides = [
 				</div>
 				
 				<div class="flex gap-4">
-					<a href="https://www.instagram.com/catseyesjusetsoupesorleans/" target="_blank" class="w-10 h-10 bg-cat-yellow text-cat-pine rounded-full flex items-center justify-center hover:scale-110 transition-all shadow-lg" aria-label="Instagram">
+					<a href="https://instagram.com" target="_blank" class="w-10 h-10 bg-cat-yellow text-cat-pine rounded-full flex items-center justify-center hover:scale-110 transition-all shadow-lg" aria-label="Instagram">
 						<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
 					</a>
-					<a href="https://www.facebook.com/Nfl45CatsEyes/" target="_blank" class="w-10 h-10 bg-cat-yellow text-cat-pine rounded-full flex items-center justify-center hover:scale-110 transition-all shadow-lg" aria-label="Facebook">
+					<a href="#" target="_blank" class="w-10 h-10 bg-cat-yellow text-cat-pine rounded-full flex items-center justify-center hover:scale-110 transition-all shadow-lg" aria-label="Facebook">
 						<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg>
 					</a>
 				</div>
@@ -1962,25 +2230,12 @@ const slides = [
 					<div class="text-5xl font-black text-cat-pine"><span id="user-points">0</span> <span class="text-xl">pts</span></div>
 				</div>
 				
-				<div class="space-y-4 bg-cat-pine/[0.03] p-6 rounded-[2rem] border border-cat-pine/5">
-					<div class="flex justify-between items-end">
-						<div>
-							<p class="text-[11px] font-black italic text-cat-pine uppercase tracking-widest">1 point collecté tous les 10€ dépensés</p>
-						</div>
-						<div class="flex flex-col items-end">
-							<span class="text-[12px] font-black text-cat-teal italic uppercase">🎁 10€ offerts</span>
-						</div>
+				<div class="space-y-4">
+					<p class="text-sm font-bold italic text-cat-pine">Ma progression :</p>
+					<div class="w-full bg-cat-pine/10 h-4 rounded-full overflow-hidden">
+						<div id="points-bar" class="bg-cat-teal h-full transition-all duration-1000" style="width: 0%"></div>
 					</div>
-
-					<div class="w-full bg-cat-pine/10 h-3 rounded-full overflow-hidden shadow-inner">
-						<div id="points-bar" class="bg-cat-teal h-full transition-all duration-700" style="width: 30%"></div>
-					</div>
-					
-					<div class="flex justify-between items-center px-1">
-						<p class="text-[9px] uppercase font-black tracking-widest text-cat-pine/50">
-							Plus que <span id="points-needed" class="text-cat-teal text-xs">7</span> points avant votre bon d'achat !
-						</p>
-					</div>
+					<p class="text-[10px] text-center uppercase font-bold text-cat-pine/50">Plus que <span id="points-needed">10</span> points avant votre cadeau !</p>
 				</div>
 
 				<button id="change-phone-btn" class="mt-8 text-xs font-bold text-cat-teal uppercase tracking-widest hover:underline cursor-pointer">
