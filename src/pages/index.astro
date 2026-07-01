@@ -17,16 +17,27 @@ const isVacation = settingsRes.data?.value || false;
 const stocksData = stocksRes.data || [];
 const GLOBAL_STOCK_PREFIX = 'global:';
 
-// Tableau des IDs de plats épuisés (ex: ["banh-cuon"])
+// Fonction de nettoyage stricte identique à la page stock
+function cleanString(str: string) {
+    return str
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-z0-9]/g, "-")
+        .replace(/-+/g, "-")
+        .replace(/^-|-$/g, "");
+}
+
+// 1. Liste des slugs de PLATS épuisés (ex: "banh-cuon")
 const slugsEpuises = stocksData
     .filter(s => s.en_stock === false && !s.product_slug.startsWith(GLOBAL_STOCK_PREFIX))
     .map(s => s.product_slug);
 const slugsEpuisesSet = new Set(slugsEpuises);
 
-// Tableau des ingrédients globaux épuisés (nettoyés pour la comparaison)
+// 2. Liste des INGRÉDIENTS épuisés (ex: "boeuf")
 const ingredientsEpuises = stocksData
     .filter(s => s.en_stock === false && s.product_slug.startsWith(GLOBAL_STOCK_PREFIX))
-    .map(s => s.product_slug.split(':')[1].replace(/-/g, ' ').toLowerCase());
+    .map(s => s.product_slug.replace(GLOBAL_STOCK_PREFIX, "")); // On garde juste "boeuf"
 const ingredientsEpuisesSet = new Set(ingredientsEpuises);
 
 // 4. TRI DES PRODUITS (Best Sellers en premier)

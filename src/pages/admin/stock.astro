@@ -1,35 +1,33 @@
 ---
 import Layout from '../../layouts/Layout.astro';
 import { getCollection } from 'astro:content';
+import { supabase } from '../../lib/supabase';
 
 const menuItems = await getCollection('menu');
 
-// Extraction dynamique ultra-large
-const allIngredients = new Set();
+// 1. Extraction dynamique des ingrédients / variantes / extras
+const allIngredients = new Set<string>();
 
 menuItems.forEach(item => {
     const data = item.data;
-
-    // 1. On scanne variant_groups (la structure complexe)
     if (data.variant_groups) {
         data.variant_groups.forEach(group => {
             group.options?.forEach(opt => allIngredients.add(opt.name.trim()));
         });
     }
-
-    // 2. On scanne variants (la liste à plat que tu as à la fin du MD)
     if (data.variants) {
         data.variants.forEach(v => allIngredients.add(v.name.trim()));
     }
-
-    // 3. On scanne aussi les extras (suppléments)
     if (data.extras) {
         data.extras.forEach(ex => allIngredients.add(ex.name.trim()));
     }
 });
 
-// Conversion en tableau et tri
 const sortedIngredients = Array.from(allIngredients).sort();
+
+// 2. Récupération des états actuels dans Supabase pour pré-cocher les cases au chargement
+const { data: stocksData } = await supabase.from('stocks').select('product_slug, en_stock');
+const stocksMap = new Map(stocksData?.map(s => [s.product_slug, s.en_stock]) || []);
 ---
 
 <Layout title="Gestion des Stocks - Cat's Eyes">
@@ -62,62 +60,80 @@ const sortedIngredients = Array.from(allIngredients).sort();
 
             <div class="max-w-4xl mx-auto bg-white rounded-[2.5rem] shadow-xl overflow-hidden border-4 border-cat-pine">
                 <div id="stock-list" class="divide-y divide-cat-pine/10">
-                    {menuItems.map((item) => (
-                    <div class="stock-row flex items-center justify-between p-6 ...">
-                        <div class="flex items-center gap-4">
-                        <span class="text-2xl">🍱</span>
-                        <div>
-                            <h3 class="font-bold text-cat-pine text-lg">{item.data.title}</h3>
-                            {/* On remplace slug par id ici pour tester */}
-                            <p class="text-[10px] text-cat-pine/40 font-mono uppercase">{item.id}</p>
-                        </div>
-                        </div>
+                    {menuItems.map((item) => {
+                        // On vérifie si le plat existe dans Supabase pour cocher ou décocher le bouton au chargement
+                        const isEnStock = stocksMap.has(item.slug) ? stocksMap.get(item.slug) : true;
 
-                        <label class="relative inline-flex items-center cursor-pointer">
+                        return (
+                            <div class="stock-row flex items-center justify-between p-6">
+                                <div class="flex items-center gap-4">
+                                    <span class="text-2xl">🍱</span>
+                                    <div>
+                                        <h3 class="font-bold text-cat-pine text-lg">{item.data.title}</h3>
+                                        <p class="text-[10px] text-cat-pine/40 font-mono uppercase">{item.slug}</p>
+                                    </div>
+                                </div>
 
-                            <input 
-                                type="checkbox" 
-                                class="sr-only peer stock-toggle" 
-                                id={item.id.toLowerCase()} 
-                            />
-                            <div class="w-14 h-7 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-cat-teal"></div>
-                            
-                            <span class="ml-3 text-[10px] font-black uppercase tracking-widest text-cat-pine/40 min-w-[70px] status-label">
-                                Chargement...
-                            </span>
-                        </label>
-                    </div>
-                    ))}
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input 
+                                        type="checkbox" 
+                                        class="sr-only peer stock-toggle" 
+                                        checked={isEnStock}
+                                        data-slug={item.slug} 
+                                    />
+                                    <div class="w-14 h-7 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-cat-teal"></div>
+                                    
+                                    <span class={`ml-3 text-[10px] font-black uppercase tracking-widest min-w-[70px] status-label ${isEnStock ? 'text-cat-teal' : 'text-red-400'}`}>
+                                        {isEnStock ? 'En ligne' : 'Épuisé'}
+                                    </span>
+                                </label>
+                            </div>
+                        );
+                    })}
                 </div>
             </div>
 
-            <div class="mt-12 mb-8">
+            <div class="max-w-4xl mx-auto mt-12 mb-8">
                 <h2 class="text-xl font-black text-cat-pine italic ml-6 mb-6 flex items-center gap-2">
                     Ingrédients & Suppléments <span class="text-sm not-italic opacity-50">({sortedIngredients.length})</span>
                 </h2>
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {sortedIngredients.map((ing) => (
-                        <div class="bg-white p-5 rounded-[2rem] border-2 border-cat-pine flex items-center justify-between shadow-sm hover:shadow-md transition-shadow">
-                            <div class="flex flex-col">
-                                <span class="font-black text-cat-pine uppercase text-xs tracking-wider">{ing}</span>
-                                <span class="text-[8px] font-bold text-cat-pine/30 uppercase">Global</span>
-                            </div>
-                            
-                            <label class="relative inline-flex items-center cursor-pointer">
-                                <input 
-                                    type="checkbox" 
-                                    class="sr-only peer stock-toggle" 
-                                    id={`global:${ing.toLowerCase().replace(/\s+/g, '-')}`} 
-                                />
-                                <div class="w-14 h-7 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:bg-cat-teal after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:after:translate-x-full border-2 border-transparent peer-checked:border-transparent"></div>
+                    {sortedIngredients.map((ing) => {
+                        // Génération d'un identifiant global ultra-propre (sans accents, sans espaces bizarres)
+                        const cleanSlug = "global:" + ing
+                            .toLowerCase()
+                            .normalize("NFD")
+                            .replace(/[\u0300-\u036f]/g, "")
+                            .replace(/[^a-z0-9]/g, "-")
+                            .replace(/-+/g, "-")
+                            .replace(/^-|-$/g, "");
+
+                        const isEnStock = stocksMap.has(cleanSlug) ? stocksMap.get(cleanSlug) : true;
+
+                        return (
+                            <div class="bg-white p-5 rounded-[2rem] border-2 border-cat-pine flex items-center justify-between shadow-sm hover:shadow-md transition-shadow">
+                                <div class="flex flex-col">
+                                    <span class="font-black text-cat-pine uppercase text-xs tracking-wider">{ing}</span>
+                                    <span class="text-[8px] font-bold text-cat-pine/30 uppercase">Global</span>
+                                </div>
                                 
-                                <span class="ml-3 text-[9px] font-black uppercase tracking-widest text-cat-pine/40 min-w-[65px] status-label">
-                                    Chargement...
-                                </span>
-                            </label>
-                        </div>
-                    ))}
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input 
+                                        type="checkbox" 
+                                        class="sr-only peer stock-toggle" 
+                                        checked={isEnStock}
+                                        data-slug={cleanSlug} 
+                                    />
+                                    <div class="w-14 h-7 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:bg-cat-teal after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:after:translate-x-full border-2 border-transparent peer-checked:border-transparent"></div>
+                                    
+                                    <span class={`ml-3 text-[9px] font-black uppercase tracking-widest min-w-[65px] status-label ${isEnStock ? 'text-cat-teal' : 'text-red-400'}`}>
+                                        {isEnStock ? 'En ligne' : 'Épuisé'}
+                                    </span>
+                                </label>
+                            </div>
+                        );
+                    })}
                 </div>
             </div>
         </main>
@@ -126,96 +142,36 @@ const sortedIngredients = Array.from(allIngredients).sort();
     <script>
         import { supabase } from '../../lib/supabase';
 
-        async function initStock() {
-            // --- 1. AUTH CHECK ---
-            const { data: { session } } = await supabase.auth.getSession();
-            if (!session) return window.location.replace('/admin/login');
-            document.documentElement.style.visibility = 'visible';
-
-            // --- 2. RÉCUPÉRATION DES DONNÉES (STOCKS + SETTINGS) ---
-            // On récupère tout en parallèle pour gagner du temps
-            const [stocksRes, settingsRes] = await Promise.all([
-                supabase.from('stocks').select('*'),
-                supabase.from('settings').select('*').eq('key', 'vacation_mode').single()
-            ]);
-
-            if (stocksRes.error) console.error("Erreur Stocks:", stocksRes.error);
-            const currentStocks = stocksRes.data;
-
-            // --- 3. GESTION DU MODE VACANCES ---
-            const vacationBtn = document.getElementById('vacation-toggle');
-            let isVacation = settingsRes.data ? settingsRes.data.value : false;
-            
-            updateVacationUI(isVacation, vacationBtn);
-
-            vacationBtn?.addEventListener('click', async () => {
-                isVacation = !isVacation;
-                
-                // On désactive le bouton pendant l'envoi
-                if(vacationBtn) vacationBtn.style.opacity = "0.5";
-
-                const { error } = await supabase
-                    .from('settings')
-                    .upsert({ key: 'vacation_mode', value: isVacation });
-
-                if (!error) {
-                    updateVacationUI(isVacation, vacationBtn);
-                } else {
-                    alert("Erreur lors du changement de mode");
-                }
-                if(vacationBtn) vacationBtn.style.opacity = "1";
-            });
-
-            // --- 4. GESTION DES TOGGLES INDIVIDUELS ---
+        function initStockManagement() {
             const toggles = document.querySelectorAll('.stock-toggle');
-
-            toggles.forEach((toggle: HTMLInputElement) => {
-                const productId = toggle.id; 
-                
-                // On cherche l'état dans la base
-                const state = currentStocks?.find(s => s.product_slug === productId);
-                
-                // Application de l'état (par défaut TRUE si pas trouvé)
-                toggle.checked = state ? state.en_stock : true;
-                updateLabel(toggle);
-
-                // Écouteur de changement pour chaque produit/ingrédient
+            
+            toggles.forEach(toggle => {
                 toggle.addEventListener('change', async (e) => {
-                    const target = e.currentTarget as HTMLInputElement;
-                    const currentId = target.id.trim().toLowerCase(); // On force les minuscules ici aussi
+                    const target = e.target as HTMLInputElement;
+                    const slug = target.getAttribute('data-slug');
                     const newStatus = target.checked;
+
+                    if (!slug) return;
 
                     updateLabel(target);
 
+                    // Sauvegarde directe et propre dans Supabase
                     const { error: upsertError } = await supabase
                         .from('stocks')
-                        .upsert({ 
-                            product_slug: currentId, 
-                            en_stock: newStatus,
-                            updated_at: new Date().toISOString()
-                        });
+                        .upsert({
+                            product_slug: slug,
+                            en_stock: newStatus
+                        }, { onConflict: 'product_slug' });
 
                     if (upsertError) {
                         console.error(upsertError);
-                        alert("Erreur de sauvegarde");
+                        alert("Erreur lors de la sauvegarde du stock.");
+                        // Annulation visuelle en cas d'échec
                         target.checked = !newStatus;
                         updateLabel(target);
                     }
                 });
             });
-        }
-
-        // --- FONCTIONS UTILITAIRES ---
-
-        function updateVacationUI(status, btn) {
-            if (!btn) return;
-            if (status) {
-                btn.textContent = "☀️ Mode Vacances : ACTIF";
-                btn.className = "px-6 py-2 rounded-full font-black uppercase text-[10px] tracking-widest transition-all border-2 shadow-lg active:scale-95 bg-cat-pine text-white border-cat-pine";
-            } else {
-                btn.textContent = "🏠 Boutique : OUVERTE";
-                btn.className = "px-6 py-2 rounded-full font-black uppercase text-[10px] tracking-widest transition-all border-2 shadow-lg active:scale-95 bg-white text-cat-pine border-cat-pine";
-            }
         }
 
         function updateLabel(el: HTMLInputElement) {
@@ -227,7 +183,8 @@ const sortedIngredients = Array.from(allIngredients).sort();
             }
         }
 
-        // Lancement au chargement du DOM
-        document.addEventListener('DOMContentLoaded', initStock);
+        // Support Astro standard + transitions de pages
+        document.addEventListener('astro:page-load', initStockManagement);
+        initStockManagement();
     </script>
 </Layout>
