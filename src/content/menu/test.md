@@ -1,6 +1,6 @@
 ---
 title: Phô (Bouillon Poulet)
-price: "15"
+price: 16
 category: Soupes
 description: >-
   Une délicieuse base de bouillon au poulet fait-maison et personnalisable selon
