@@ -1,6 +1,6 @@
 ---
 title: Tom Yam
-price: "15"
+price: 16
 category: Soupes
 description: >-
   Laissez-vous transporter par les saveurs vibrantes de la Thaïlande avec notre
