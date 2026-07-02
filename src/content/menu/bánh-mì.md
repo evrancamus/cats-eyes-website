@@ -1,6 +1,6 @@
 ---
 title: Bánh Mì
-price: "15"
+price: 10
 category: Plats
 preorder: true
 description: >-
