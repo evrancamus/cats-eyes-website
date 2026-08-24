@@ -4,6 +4,7 @@ price: 16
 category: Soupes
 preorder: false
 is_bestseller: true
+hasSpice: true
 description: >-
   Une délicieuse base de bouillon au boeuf fait-maison et personnalisable selon
   vos envies. 
